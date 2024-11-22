@@ -21,9 +21,6 @@ class Base64ImageField(serializers.ImageField):
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор пользователей."""
 
-    # avatar = Base64ImageField(required=False)
-    # avatar = Base64ImageField(required=True)
-
     class Meta:
         model = User
         fields = (
@@ -35,7 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserAvatarSerializer(serializers.ModelSerializer):
     """Сериализатор пользователей."""
 
-    avatar = Base64ImageField(required=True, allow_null=True)
+    avatar = Base64ImageField(required=True)
 
     class Meta:
         model = User
