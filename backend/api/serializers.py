@@ -2,8 +2,9 @@ import base64
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
-from recipes.models import User, Recipe, Ingredient, Tag
+from recipes.models import User, Recipe, Ingredient, Tag, Subscription
 
 
 class Base64ImageField(serializers.ImageField):
@@ -61,3 +62,46 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = '__all__'
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    """Сериализатор подписок."""
+
+    recipes = RecipeSerializer(many=True)
+    # is_subscribed =
+    # recipes_count =
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'is_subscribed', 'recipes', 'avatar'
+        )
+
+
+class SubscribeSerializer(serializers.ModelSerializer):
+    """Сериализатор подписок."""
+
+    user = serializers.SlugRelatedField(
+        queryset=User.objects.all(), slug_field='id',
+        default=serializers.CurrentUserDefault()
+    )
+    author = serializers.SlugRelatedField(
+        queryset=User.objects.all(), slug_field='id'
+    )
+
+    class Meta:
+        model = Subscription
+        fields = ('user', 'author')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Subscription.objects.all(),
+                fields=('user', 'author'),
+                message='Вы уже подписаны на данного автора'
+            )
+        ]
+
+    def validate_user(self, value):
+        if self.initial_data.get('author') == value.id:
+            raise serializers.ValidationError('Нельзя подписаться на себя')
+        return value

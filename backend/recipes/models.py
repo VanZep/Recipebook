@@ -34,7 +34,8 @@ class User(AbstractUser):
         verbose_name='Пароль'
     )
     is_subscribed = models.BooleanField(
-        default=False
+        default=False,
+        verbose_name='Флаг подписки'
     )
     avatar = models.ImageField(
         upload_to='users/',
@@ -53,6 +54,34 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class Subscription(models.Model):
+    """Модель подписки."""
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE,
+        related_name='subscriber',
+        verbose_name='Подписчик'
+    )
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE,
+        related_name='subscribing',
+        verbose_name='Автор'
+    )
+
+    class Meta:
+        verbose_name = 'подписка'
+        verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'author'),
+                name='unique_user_author'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user} подписан на {self.author}'
 
 
 class Tag(TitleModel):
@@ -83,6 +112,7 @@ class Ingredient(TitleModel):
     class Meta:
         verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        ordering = ('title',)
 
     def __str__(self):
         return self.title
@@ -118,7 +148,7 @@ class Recipe(TitleModel):
     class Meta:
         verbose_name = 'рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ('-title',)
+        ordering = ('title',)
 
     def __str__(self):
         return self.title
