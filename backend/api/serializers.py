@@ -25,7 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'email', 'first_name',
+            'email', 'id', 'username', 'first_name',
             'last_name', 'is_subscribed', 'avatar'
         )
 
@@ -45,7 +45,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ingredient
-        fields = ('id', 'title', 'measurement_unit')
+        fields = ('id', 'name', 'measurement_unit')
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -53,11 +53,19 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
-        fields = ('id', 'title', 'slug')
+        fields = ('id', 'name', 'slug')
+
+
+class RecipeShortSerializer(serializers.ModelSerializer):
+    """Сериализатор рецептов."""
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
-    """Сериализатор рецептов."""
+    """Сериализатор записи рецептов."""
 
     # author = serializers.SlugRelatedField(
     #     slug_field='username', read_only=True
@@ -69,34 +77,21 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         model = Recipe
         # exclude = ('id',)
         fields = (
-            'ingredient', 'tag', 'image',
-            'title', 'description', 'cook_time'
+            'ingredients', 'tags', 'image',
+            'name', 'text', 'cooking_time'
         )
         # fields = (
         #     'title', 'author', 'tag', 'description',
-        #     'image', 'cook_time'
+        #     'image', 'cooking_time'
         # )
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
-    """Сериализатор рецептов."""
+    """Сериализатор чтения рецептов."""
 
     class Meta:
         model = Recipe
         fields = '__all__'
-
-
-class RecipeShortSerializer(serializers.ModelSerializer):
-    """Сериализатор рецептов."""
-
-    id = serializers.IntegerField()
-    title = serializers.CharField()
-    image = serializers.ImageField()
-    cook_time = serializers.IntegerField()
-
-    # class Meta:
-    #     model = Recipe
-    #     fields = '__all__'
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -114,12 +109,11 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        exclude = ('user', 'author')
+        fields = (
+            'email', 'id', 'username', 'first_name', 'last_name',
+            'is_subscribed', 'recipes', 'recipes_count', 'avatar'
+        )
         # fields = '__all__'
-        # fields = (
-        #     'id', 'username', 'email', 'first_name', 'last_name',
-        #     'is_subscribed', 'recipes', 'recipes_count', 'avatar'
-        # )
         # read_only_fields = (
         #     'id', 'username', 'email', 'first_name', 'last_name',
         #     'is_subscribed', 'recipes', 'recipes_count', 'avatar'

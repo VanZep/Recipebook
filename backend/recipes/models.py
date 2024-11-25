@@ -3,7 +3,7 @@ from django.db.models.constraints import CheckConstraint
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
 
-from core.models import TitleModel
+from core.models import NameModel
 from core.constants import (
     USER_CHARFIELD_MAX_LENGTH, EMAILFIELD_MAX_LENGTH,
     CHARFIELD_MAX_LENGTH, SLUGFIELD_MAX_LENGTH, MIN_TIME
@@ -90,7 +90,7 @@ class Subscription(models.Model):
         return f'{self.user} подписан на {self.author}'
 
 
-class Tag(TitleModel):
+class Tag(NameModel):
     """Модель тегов."""
 
     slug = models.SlugField(
@@ -104,10 +104,10 @@ class Tag(TitleModel):
         verbose_name_plural = 'Теги'
 
     def __str__(self):
-        return self.title
+        return self.name
 
 
-class Ingredient(TitleModel):
+class Ingredient(NameModel):
     """Модель ингредиентов."""
 
     measurement_unit = models.CharField(
@@ -118,28 +118,30 @@ class Ingredient(TitleModel):
     class Meta:
         verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        ordering = ('title',)
+        ordering = ('name',)
 
     def __str__(self):
-        return self.title
+        return self.name
 
 
-class Recipe(TitleModel):
+class Recipe(NameModel):
     """Модель рецептов."""
 
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='recipes',
-        verbose_name='Автор рецепта'
+        verbose_name='Автор'
     )
-    tag = models.ManyToManyField(
-        Tag
-    )
-    description = models.TextField(
+    text = models.TextField(
         verbose_name='Описание'
     )
-    ingredient = models.ForeignKey(
+    tags = models.ManyToManyField(
+        Tag,
+        related_name='recipes',
+        verbose_name='Теги'
+    )
+    ingredients = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
         related_name='recipes',
@@ -149,7 +151,7 @@ class Recipe(TitleModel):
         upload_to='recipes/images/',
         verbose_name='Изображение'
     )
-    cook_time = models.PositiveSmallIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         validators=(
             MinValueValidator(
                 MIN_TIME,
@@ -158,11 +160,15 @@ class Recipe(TitleModel):
         ),
         verbose_name='Время приготовления'
     )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата и время публикации'
+    )
 
     class Meta:
         verbose_name = 'рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ('title',)
+        ordering = ('-pub_date',)
 
     def __str__(self):
-        return self.title
+        return self.name

@@ -3,10 +3,10 @@ from django.db import models
 from .constants import CHARFIELD_MAX_LENGTH
 
 
-class TitleModel(models.Model):
-    """Абстрактная модель с общим полем title."""
+class NameModel(models.Model):
+    """Абстрактная модель с общим полем name."""
 
-    title = models.CharField(
+    name = models.CharField(
         max_length=CHARFIELD_MAX_LENGTH,
         verbose_name='Название'
     )
