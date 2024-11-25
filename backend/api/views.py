@@ -56,7 +56,6 @@ class UserViewSet(views.UserViewSet):
     def subscribe(self, request, id=None):
         """Добавление подписки."""
         author = get_object_or_404(User, id=id)
-        print('ok')
         if Subscription.objects.filter(
             user=request.user.id, author=author.id
         ).exists():

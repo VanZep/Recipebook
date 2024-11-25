@@ -6,7 +6,8 @@ from django.core.validators import MinValueValidator
 from core.models import NameModel
 from core.constants import (
     USER_CHARFIELD_MAX_LENGTH, EMAILFIELD_MAX_LENGTH,
-    CHARFIELD_MAX_LENGTH, SLUGFIELD_MAX_LENGTH, MIN_TIME
+    CHARFIELD_MAX_LENGTH, SLUGFIELD_MAX_LENGTH,
+    MIN_TIME, MIN_AMOUNT
 )
 
 
@@ -118,7 +119,7 @@ class Ingredient(NameModel):
     class Meta:
         verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        ordering = ('name',)
+        # ordering = ('name',)
 
     def __str__(self):
         return self.name
@@ -141,9 +142,9 @@ class Recipe(NameModel):
         related_name='recipes',
         verbose_name='Теги'
     )
-    ingredients = models.ForeignKey(
+    ingredients = models.ManyToManyField(
         Ingredient,
-        on_delete=models.CASCADE,
+        through='IngredientRecipe',
         related_name='recipes',
         verbose_name='Ингредиенты'
     )
@@ -172,3 +173,36 @@ class Recipe(NameModel):
 
     def __str__(self):
         return self.name
+
+
+class IngredientRecipe(models.Model):
+    """Модель связи ингредиентов с рецептами."""
+
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name='ingredients_recipe',
+        verbose_name='Ингредиент'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='recipes_ingredient',
+        verbose_name='Рецепт'
+    )
+    amount = models.PositiveSmallIntegerField(
+        validators=(
+            MinValueValidator(
+                MIN_AMOUNT,
+                f'Минимальное количество {MIN_AMOUNT}.'
+            ),
+        ),
+        verbose_name='Количество'
+    )
+
+    class Meta:
+        verbose_name = 'ингредтент для рецепта'
+        verbose_name_plural = 'Ингредиенты для рецептов'
+
+    def __str__(self):
+        return f'{self.ingredient.name} для {self.recipe.name}'

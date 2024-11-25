@@ -4,7 +4,9 @@ from django.core.files.base import ContentFile
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from recipes.models import User, Recipe, Ingredient, Tag, Subscription
+from recipes.models import (
+    User, Recipe, Ingredient, IngredientRecipe, Tag, Subscription
+)
 
 
 class Base64ImageField(serializers.ImageField):
@@ -31,21 +33,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserAvatarSerializer(serializers.ModelSerializer):
-    """Сериализатор пользователей."""
+    """Сериализатор аватара."""
 
     avatar = Base64ImageField(required=True)
 
     class Meta:
         model = User
         fields = ('avatar',)
-
-
-class IngredientSerializer(serializers.ModelSerializer):
-    """Сериализатор ингредиентов."""
-
-    class Meta:
-        model = Ingredient
-        fields = ('id', 'name', 'measurement_unit')
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -56,12 +50,20 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'slug')
 
 
-class RecipeShortSerializer(serializers.ModelSerializer):
-    """Сериализатор рецептов."""
+class IngredientSerializer(serializers.ModelSerializer):
+    """Сериализатор ингредиентов."""
 
     class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
+        model = Ingredient
+        fields = ('id', 'name', 'measurement_unit')
+
+
+class IngredientRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор связи ингредиентов с рецептами."""
+
+    class Meta:
+        model = IngredientRecipe
+        fields = ('id', 'amount')
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
@@ -70,8 +72,9 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     # author = serializers.SlugRelatedField(
     #     slug_field='username', read_only=True
     # )
-    image = Base64ImageField(required=True)
-    # tag = TagSerializer(many=True)
+    # image = Base64ImageField(required=True)
+    image = Base64ImageField(required=False)
+    ingredients = IngredientRecipeSerializer(many=True)
 
     class Meta:
         model = Recipe
@@ -85,6 +88,25 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         #     'image', 'cooking_time'
         # )
 
+    # def create(self, validated_data):
+    #     ingredients = validated_data.pop('ingredients')
+    #     print(validated_data, '|', validated_data.get('ingredients'), '|', ingredients)
+    #     print()
+    #     print(self.initial_data)
+    #     if 'ingredients' not in self.initial_data:
+
+    #         cat = Cat.objects.create(**validated_data)
+    #         return cat
+    #     else:
+    #         achievements = validated_data.pop('achievements')
+    #         cat = Cat.objects.create(**validated_data)
+    #         for achievement in achievements:
+    #             current_achievement, status = Achievement.objects.get_or_create(
+    #                 **achievement)
+    #             AchievementCat.objects.create(
+    #                 achievement=current_achievement, cat=cat)
+    #         return cat
+
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     """Сериализатор чтения рецептов."""
@@ -92,6 +114,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = '__all__'
+
+
+class RecipeShortSerializer(serializers.ModelSerializer):
+    """Сериализатор рецептов с ограниченным набором полей."""
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -119,6 +149,9 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         #     'is_subscribed', 'recipes', 'recipes_count', 'avatar'
         # )
 
+    def get_recipe_objects(self, obj):
+        return Recipe.objects.filter(author=obj.author.id)
+
     def get_is_subscribed(self, obj):
         # print(obj.user)
         return Subscription.objects.filter(
@@ -126,13 +159,19 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         ).exists()
 
     def get_recipes(self, obj):
-        recipes = Recipe.objects.filter(author=obj.author.id)
-        serializer = RecipeShortSerializer(recipes, many=True)
+        serializer = RecipeShortSerializer(
+            self.get_recipe_objects(obj), many=True
+        )
         return serializer.data
+
+    # def get_recipes(self, obj):
+    #     recipes = Recipe.objects.filter(author=obj.author.id)
+    #     serializer = RecipeShortSerializer(recipes, many=True)
+    #     return serializer.data
 
     def get_recipes_count(self, obj):
         # print(obj.user)
-        return Recipe.objects.filter(author=obj.author.id).count()
+        return self.get_recipe_objects(obj).count()
 
 
 # class SubscribeSerializer(serializers.ModelSerializer):
