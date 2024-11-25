@@ -10,8 +10,8 @@ from djoser import views
 
 from recipes.models import Recipe, Ingredient, Tag, User, Subscription
 from .serializers import (
-    UserAvatarSerializer, RecipeSerializer, IngredientSerializer,
-    TagSerializer, SubscriptionSerializer, SubscribeSerializer
+    UserAvatarSerializer, RecipeWriteSerializer, RecipeReadSerializer,
+    IngredientSerializer, TagSerializer, SubscriptionSerializer,
 )
 
 
@@ -39,7 +39,7 @@ class UserViewSet(views.UserViewSet):
     #     return Response(status=HTTP_204_NO_CONTENT)
 
     @action(methods=('put',), detail=False, url_path='me/avatar')
-    def avatar(self, request, pk=None):
+    def avatar(self, request):
         """Добавление аватара."""
         serializer = UserAvatarSerializer(request.user, data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -47,7 +47,7 @@ class UserViewSet(views.UserViewSet):
         return Response(serializer.data, status=HTTP_200_OK)
 
     @avatar.mapping.delete
-    def delete_avatar(self, request, pk=None):
+    def delete_avatar(self, request):
         """Удаление аватара."""
         request.user.avatar.delete()
         return Response(status=HTTP_204_NO_CONTENT)
@@ -55,20 +55,45 @@ class UserViewSet(views.UserViewSet):
     @action(methods=('post',), detail=True)
     def subscribe(self, request, id=None):
         """Добавление подписки."""
-        author = get_object_or_404(User, pk=id)
-        serializer = SubscribeSerializer(
-            data={'author': author.id, 'user': request.user.id}
+        author = get_object_or_404(User, id=id)
+        print('ok')
+        if Subscription.objects.filter(
+            user=request.user.id, author=author.id
+        ).exists():
+            return Response(
+                {'non_field_errors': ['Вы уже подписаны на данного автора']}
+            )
+        if request.user.id == author.id:
+            return Response(
+                {'non_field_errors': ['Нельзя подписаться на себя']}
+            )
+        subscription = Subscription.objects.create(
+            user=request.user, author=author
         )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(
-            SubscriptionSerializer(author).data, status=HTTP_201_CREATED
-        )
+        # subscription.save()
+        serializer = SubscriptionSerializer(subscription)
+        return Response(serializer.data, status=HTTP_201_CREATED)
+        # sub = Subscription(user=request.user, author=author)
+        # serializer = SubscribeSerializer(sub)
+        # sub.save()
+        # serializer = SubscribeSerializer(
+        #     data={'author': author.id, 'user': request.user.id}
+        # )
+        # serializer.is_valid(raise_exception=True)
+        # serializer.save()
+        # author.is_subscribed = True
+        # author.save()
+        # return Response(
+        #     SubscriptionSerializer(author).data, status=HTTP_201_CREATED
+        # )
+        # return Response(
+        #     serializer.data, status=HTTP_201_CREATED
+        # )
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id=None):
         """Удаление подписки."""
-        author = get_object_or_404(User, pk=id)
+        author = get_object_or_404(User, id=id)
         subscription = Subscription.objects.filter(
             user=request.user.id, author=author.id
         )
@@ -76,15 +101,14 @@ class UserViewSet(views.UserViewSet):
             subscription.delete()
             return Response(status=HTTP_204_NO_CONTENT)
         return Response(
-            'Вы не подписаны на данного автора',
+            {'non_field_errors': ['Вы не подписаны на данного автора']},
             status=HTTP_400_BAD_REQUEST
         )
 
     @action(methods=('get',), detail=False)
-    def subscriptions(self, request, pk=None):
+    def subscriptions(self, request):
         """Список подписок."""
-        print(request.data)
-        queryset = User.objects.filter(is_subscribed=True)
+        queryset = Subscription.objects.filter(user=request.user)
         serializer = SubscriptionSerializer(queryset, many=True)
         return Response(serializer.data, status=HTTP_200_OK)
 
@@ -93,7 +117,14 @@ class RecipeViewSet(ModelViewSet):
     """Представление рецептов."""
 
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return RecipeReadSerializer
+        return RecipeWriteSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):

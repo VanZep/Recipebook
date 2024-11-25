@@ -56,7 +56,29 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'slug')
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeWriteSerializer(serializers.ModelSerializer):
+    """Сериализатор рецептов."""
+
+    # author = serializers.SlugRelatedField(
+    #     slug_field='username', read_only=True
+    # )
+    image = Base64ImageField(required=True)
+    # tag = TagSerializer(many=True)
+
+    class Meta:
+        model = Recipe
+        # exclude = ('id',)
+        fields = (
+            'ingredient', 'tag', 'image',
+            'title', 'description', 'cook_time'
+        )
+        # fields = (
+        #     'title', 'author', 'tag', 'description',
+        #     'image', 'cook_time'
+        # )
+
+
+class RecipeReadSerializer(serializers.ModelSerializer):
     """Сериализатор рецептов."""
 
     class Meta:
@@ -64,44 +86,84 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class RecipeShortSerializer(serializers.ModelSerializer):
+    """Сериализатор рецептов."""
+
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    image = serializers.ImageField()
+    cook_time = serializers.IntegerField()
+
+    # class Meta:
+    #     model = Recipe
+    #     fields = '__all__'
+
+
 class SubscriptionSerializer(serializers.ModelSerializer):
     """Сериализатор подписок."""
 
-    recipes = RecipeSerializer(many=True)
-    # is_subscribed =
-    # recipes_count =
-
-    class Meta:
-        model = User
-        fields = (
-            'id', 'username', 'email', 'first_name', 'last_name',
-            'is_subscribed', 'recipes', 'avatar'
-        )
-
-
-class SubscribeSerializer(serializers.ModelSerializer):
-    """Сериализатор подписок."""
-
-    user = serializers.SlugRelatedField(
-        queryset=User.objects.all(), slug_field='id',
-        default=serializers.CurrentUserDefault()
-    )
-    author = serializers.SlugRelatedField(
-        queryset=User.objects.all(), slug_field='id'
-    )
+    id = serializers.IntegerField(source='author.id')
+    username = serializers.CharField(source='author.username')
+    email = serializers.EmailField(source='author.email')
+    first_name = serializers.CharField(source='author.first_name')
+    last_name = serializers.CharField(source='author.last_name')
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+    avatar = serializers.CharField(source='author.avatar')
 
     class Meta:
         model = Subscription
-        fields = ('user', 'author')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Subscription.objects.all(),
-                fields=('user', 'author'),
-                message='Вы уже подписаны на данного автора'
-            )
-        ]
+        exclude = ('user', 'author')
+        # fields = '__all__'
+        # fields = (
+        #     'id', 'username', 'email', 'first_name', 'last_name',
+        #     'is_subscribed', 'recipes', 'recipes_count', 'avatar'
+        # )
+        # read_only_fields = (
+        #     'id', 'username', 'email', 'first_name', 'last_name',
+        #     'is_subscribed', 'recipes', 'recipes_count', 'avatar'
+        # )
 
-    def validate_user(self, value):
-        if self.initial_data.get('author') == value.id:
-            raise serializers.ValidationError('Нельзя подписаться на себя')
-        return value
+    def get_is_subscribed(self, obj):
+        # print(obj.user)
+        return Subscription.objects.filter(
+            user=obj.user.id, author=obj.author.id
+        ).exists()
+
+    def get_recipes(self, obj):
+        recipes = Recipe.objects.filter(author=obj.author.id)
+        serializer = RecipeShortSerializer(recipes, many=True)
+        return serializer.data
+
+    def get_recipes_count(self, obj):
+        # print(obj.user)
+        return Recipe.objects.filter(author=obj.author.id).count()
+
+
+# class SubscribeSerializer(serializers.ModelSerializer):
+#     """Сериализатор подписок."""
+
+#     user = serializers.SlugRelatedField(
+#         queryset=User.objects.all(), slug_field='id',
+#         default=serializers.CurrentUserDefault()
+#     )
+#     author = serializers.SlugRelatedField(
+#         queryset=User.objects.all(), slug_field='id'
+#     )
+
+#     class Meta:
+#         model = Subscription
+#         fields = ('user', 'author')
+#         validators = [
+#             UniqueTogetherValidator(
+#                 queryset=Subscription.objects.all(),
+#                 fields=('user', 'author'),
+#                 message='Вы уже подписаны на данного автора'
+#             )
+#         ]
+
+#     def validate_user(self, value):
+#         if self.initial_data.get('author') == value.id:
+#             raise serializers.ValidationError('Нельзя подписаться на себя')
+#         return value

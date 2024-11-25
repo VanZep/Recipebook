@@ -1,10 +1,12 @@
 from django.db import models
+from django.db.models.constraints import CheckConstraint
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator
 
 from core.models import TitleModel
 from core.constants import (
     USER_CHARFIELD_MAX_LENGTH, EMAILFIELD_MAX_LENGTH,
-    CHARFIELD_MAX_LENGTH, SLUGFIELD_MAX_LENGTH
+    CHARFIELD_MAX_LENGTH, SLUGFIELD_MAX_LENGTH, MIN_TIME
 )
 
 
@@ -77,7 +79,11 @@ class Subscription(models.Model):
             models.UniqueConstraint(
                 fields=('user', 'author'),
                 name='unique_user_author'
-            )
+            ),
+            # CheckConstraint(
+            #     check=~models.Q(author=models.F('user')),
+            #     name='author_not_equals_user'
+            # )
         ]
 
     def __str__(self):
@@ -127,7 +133,9 @@ class Recipe(TitleModel):
         related_name='recipes',
         verbose_name='Автор рецепта'
     )
-    tag = models.ManyToManyField(Tag)
+    tag = models.ManyToManyField(
+        Tag
+    )
     description = models.TextField(
         verbose_name='Описание'
     )
@@ -142,6 +150,12 @@ class Recipe(TitleModel):
         verbose_name='Изображение'
     )
     cook_time = models.PositiveSmallIntegerField(
+        validators=(
+            MinValueValidator(
+                MIN_TIME,
+                f'Минимальное время приготовления {MIN_TIME} минута.'
+            ),
+        ),
         verbose_name='Время приготовления'
     )
 
