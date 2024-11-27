@@ -47,8 +47,8 @@ class User(AbstractUser):
         verbose_name='Аватар'
     )
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ('first_name', 'last_name', 'email')
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
     class Meta:
         verbose_name = 'пользователь'
@@ -181,13 +181,13 @@ class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        related_name='ingredients_recipe',
+        related_name='ingredient_recipes',
         verbose_name='Ингредиент'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='recipes_ingredient',
+        related_name='recipe_ingredients',
         verbose_name='Рецепт'
     )
     amount = models.PositiveSmallIntegerField(

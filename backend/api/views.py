@@ -11,7 +11,7 @@ from djoser import views
 from recipes.models import Recipe, Ingredient, Tag, User, Subscription
 from .serializers import (
     UserAvatarSerializer, RecipeWriteSerializer, RecipeReadSerializer,
-    IngredientSerializer, TagSerializer, SubscriptionSerializer,
+    IngredientSerializer, TagSerializer, SubscriptionSerializer, #RecipeSerializer
 )
 
 
@@ -116,11 +116,19 @@ class RecipeViewSet(ModelViewSet):
     """Представление рецептов."""
 
     queryset = Recipe.objects.all()
+    # serializer_class = RecipeWriteSerializer
+    # serializer_class = RecipeSerializer
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return RecipeReadSerializer
         return RecipeWriteSerializer
+
+    # def get_serializer_class(self):
+    #     actions = ['create', 'update', 'partial_update']
+    #     if self.action in actions:
+    #         return RecipeWriteSerializer
+    #     return super().get_serializer_class()
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
