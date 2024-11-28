@@ -8,10 +8,13 @@ from rest_framework.status import (
 )
 from djoser import views
 
-from recipes.models import Recipe, Ingredient, Tag, User, Subscription
+from recipes.models import (
+    Recipe, Ingredient, Tag, User, Subscription, FavoriteRecipe
+)
 from .serializers import (
     UserAvatarSerializer, RecipeWriteSerializer, RecipeReadSerializer,
-    IngredientSerializer, TagSerializer, SubscriptionSerializer
+    IngredientSerializer, TagSerializer, SubscriptionSerializer,
+    RecipeShortSerializer
 )
 
 
@@ -136,6 +139,28 @@ class RecipeViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    @action(methods=('post',), detail=True)
+    def favorite(self, request, pk=None):
+        """Добавление в избранное."""
+        # favorite_recipes = request.user.favorite_recipes.all()
+        recipe = get_object_or_404(Recipe, pk=pk)
+        FavoriteRecipe.objects.create(
+            user=request.user, recipe=recipe
+        )
+        serializer = RecipeShortSerializer(
+            recipe, context={'request': request}
+        )
+        return Response(serializer.data, status=HTTP_201_CREATED)
+
+    @favorite.mapping.delete
+    def delete_favorite(self, request, pk=None):
+        """Удаление из избранного."""
+        recipe = get_object_or_404(Recipe, pk=pk)
+        FavoriteRecipe.objects.get(
+            user=request.user, recipe=recipe
+        ).delete()
+        return Response(status=HTTP_204_NO_CONTENT)
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):

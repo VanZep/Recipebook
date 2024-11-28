@@ -76,7 +76,7 @@ class Subscription(models.Model):
     class Meta:
         verbose_name = 'подписка'
         verbose_name_plural = 'Подписки'
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=('user', 'author'),
                 name='unique_user_author'
@@ -85,7 +85,7 @@ class Subscription(models.Model):
             #     check=~models.Q(author=models.F('user')),
             #     name='author_not_equals_user'
             # )
-        ]
+        )
 
     def __str__(self):
         return f'{self.user} подписан на {self.author}'
@@ -175,6 +175,36 @@ class Recipe(NameModel):
         return self.name
 
 
+class FavoriteRecipe(models.Model):
+    """Модель избранных рецептов."""
+
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='recipe_favorites',
+        verbose_name='Рецепт'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='favorite_recipes',
+        verbose_name='Пользователь'
+    )
+
+    class Meta:
+        verbose_name = 'избранный рецепт'
+        verbose_name_plural = 'Избранные рецепты'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='unique_user_recipe'
+            ),
+        )
+
+    def __str__(self):
+        return f'Избранный рецепт - {self.recipe} для {self.user}'
+
+
 class IngredientRecipe(models.Model):
     """Модель связи ингредиентов с рецептами."""
 
@@ -203,6 +233,12 @@ class IngredientRecipe(models.Model):
     class Meta:
         verbose_name = 'ингредтент для рецепта'
         verbose_name_plural = 'Ингредиенты для рецептов'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('ingredient', 'recipe'),
+                name='unique_ingredient_recipe'
+            ),
+        )
 
     def __str__(self):
-        return f'{self.ingredient.name} для {self.recipe.name}'
+        return f'Ингредиент - {self.ingredient} для рецепта - {self.recipe}'
