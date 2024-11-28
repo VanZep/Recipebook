@@ -65,11 +65,11 @@ class UserViewSet(views.UserViewSet):
             user=request.user.id, author=author.id
         ).exists():
             return Response(
-                {'non_field_errors': ['Вы уже подписаны на данного автора']}
+                {'detail': 'Вы уже подписаны на данного автора'}
             )
         if request.user.id == author.id:
             return Response(
-                {'non_field_errors': ['Нельзя подписаться на себя']}
+                {'detail': 'Нельзя подписаться на себя'}
             )
         subscription = Subscription.objects.create(
             user=request.user, author=author
@@ -105,7 +105,7 @@ class UserViewSet(views.UserViewSet):
             subscription.delete()
             return Response(status=HTTP_204_NO_CONTENT)
         return Response(
-            {'non_field_errors': ['Вы не подписаны на данного автора']},
+            {'detail': 'Вы не подписаны на данного автора'},
             status=HTTP_400_BAD_REQUEST
         )
 
@@ -145,6 +145,16 @@ class RecipeViewSet(ModelViewSet):
         """Добавление в избранное."""
         # favorite_recipes = request.user.favorite_recipes.all()
         recipe = get_object_or_404(Recipe, pk=pk)
+        if FavoriteRecipe.objects.filter(
+            user=request.user, recipe=recipe
+        ).exists():
+            return Response(
+                {'detail': 'Данный рецепт уже находится у вас в избранном'}
+            )
+        if request.user == recipe.author:
+            return Response(
+                {'detail': 'Нельзя добавить в избранное свой рецепт'}
+            )
         FavoriteRecipe.objects.create(
             user=request.user, recipe=recipe
         )
@@ -157,10 +167,16 @@ class RecipeViewSet(ModelViewSet):
     def delete_favorite(self, request, pk=None):
         """Удаление из избранного."""
         recipe = get_object_or_404(Recipe, pk=pk)
-        FavoriteRecipe.objects.get(
+        favorite_recipe = FavoriteRecipe.objects.filter(
             user=request.user, recipe=recipe
-        ).delete()
-        return Response(status=HTTP_204_NO_CONTENT)
+        )
+        if favorite_recipe.exists():
+            favorite_recipe.delete()
+            return Response(status=HTTP_204_NO_CONTENT)
+        return Response(
+            {'detail': 'У вас в избранном нет такого рецепта'},
+            status=HTTP_400_BAD_REQUEST
+        )
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
