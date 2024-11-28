@@ -11,7 +11,7 @@ from djoser import views
 from recipes.models import Recipe, Ingredient, Tag, User, Subscription
 from .serializers import (
     UserAvatarSerializer, RecipeWriteSerializer, RecipeReadSerializer,
-    IngredientSerializer, TagSerializer, SubscriptionSerializer, #RecipeSerializer
+    IngredientSerializer, TagSerializer, SubscriptionSerializer
 )
 
 
@@ -41,7 +41,9 @@ class UserViewSet(views.UserViewSet):
     @action(methods=('put',), detail=False, url_path='me/avatar')
     def avatar(self, request):
         """Добавление аватара."""
-        serializer = UserAvatarSerializer(request.user, data=request.data)
+        serializer = UserAvatarSerializer(
+            request.user, data=request.data, context={'request': request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=HTTP_200_OK)
@@ -108,7 +110,9 @@ class UserViewSet(views.UserViewSet):
     def subscriptions(self, request):
         """Список подписок."""
         queryset = Subscription.objects.filter(user=request.user)
-        serializer = SubscriptionSerializer(queryset, many=True)
+        serializer = SubscriptionSerializer(
+            queryset, many=True, context={'request': request}
+        )
         return Response(serializer.data, status=HTTP_200_OK)
 
 
