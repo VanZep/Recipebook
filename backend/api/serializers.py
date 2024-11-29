@@ -6,7 +6,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (
     User, Recipe, Ingredient, IngredientRecipe, Tag,
-    Subscription, FavoriteRecipe
+    Subscription, FavoriteRecipe, ShoppingCart
 )
 
 
@@ -139,26 +139,25 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         source='recipe_ingredients', many=True, read_only=True
     )
     is_favorited = serializers.SerializerMethodField()
-    # is_in_shopping_cart = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = (
             'id', 'tags', 'author', 'ingredients',
-            'is_favorited', #'is_in_shopping_cart',
+            'is_favorited', 'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time'
         )
 
     def get_is_favorited(self, obj):
-        print()
-        print(obj)
-        print()
         request = self.context.get('request')
-        print(self.context)
-        print()
-        print(request.user.favorite_recipes.all())
-        print()
         return FavoriteRecipe.objects.filter(
+            user=request.user, recipe=obj
+        ).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get('request')
+        return ShoppingCart.objects.filter(
             user=request.user, recipe=obj
         ).exists()
 

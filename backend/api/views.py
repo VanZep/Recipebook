@@ -9,7 +9,7 @@ from rest_framework.status import (
 from djoser import views
 
 from recipes.models import (
-    Recipe, Ingredient, Tag, User, Subscription, FavoriteRecipe
+    Recipe, Ingredient, Tag, User, Subscription, FavoriteRecipe, ShoppingCart
 )
 from .serializers import (
     UserAvatarSerializer, RecipeWriteSerializer, RecipeReadSerializer,
@@ -188,6 +188,43 @@ class RecipeViewSet(ModelViewSet):
 
     def is_exists(self, user, model, obj):
         return model.objects.filter(user=user, recipe=obj).exists()
+
+    @action(methods=('post',), detail=True)
+    def shopping_cart(self, request, pk=None):
+        """Добавление в корзину."""
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if ShoppingCart.objects.filter(
+            user=request.user, recipe=recipe
+        ).exists():
+            return Response(
+                {'detail': 'Данный рецепт уже находится у вас в корзине'}
+            )
+        if request.user == recipe.author:
+            return Response(
+                {'detail': 'Нельзя добавить в корзину свой рецепт'}
+            )
+        shopping_cart_recipe = ShoppingCart.objects.create(
+            user=request.user, recipe=recipe
+        )
+        serializer = AddRecipeSerializer(
+            shopping_cart_recipe, context={'request': request}
+        )
+        return Response(serializer.data, status=HTTP_201_CREATED)
+
+    @shopping_cart.mapping.delete
+    def delete_from_shopping_cart(self, request, pk=None):
+        """Удаление из корзины."""
+        recipe = get_object_or_404(Recipe, pk=pk)
+        shopping_cart_recipe = ShoppingCart.objects.filter(
+            user=request.user, recipe=recipe
+        )
+        if shopping_cart_recipe.exists():
+            shopping_cart_recipe.delete()
+            return Response(status=HTTP_204_NO_CONTENT)
+        return Response(
+            {'detail': 'У вас в корзине нет такого рецепта'},
+            status=HTTP_400_BAD_REQUEST
+        )
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
