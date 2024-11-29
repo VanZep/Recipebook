@@ -5,7 +5,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (
-    User, Recipe, Ingredient, IngredientRecipe, Tag, Subscription
+    User, Recipe, Ingredient, IngredientRecipe, Tag,
+    Subscription, FavoriteRecipe
 )
 
 
@@ -137,13 +138,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     ingredients = IngredientRecipeReadSerializer(
         source='recipe_ingredients', many=True, read_only=True
     )
-    # is_favorited = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
+    # is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = (
             'id', 'tags', 'author', 'ingredients',
-            #'is_favorited', #'is_in_shopping_cart',
+            'is_favorited', #'is_in_shopping_cart',
             'name', 'image', 'text', 'cooking_time'
         )
 
@@ -154,13 +156,28 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         print(self.context)
         print()
-        print(request.user)
+        print(request.user.favorite_recipes.all())
         print()
-        return obj
+        return FavoriteRecipe.objects.filter(
+            user=request.user, recipe=obj
+        ).exists()
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
     """Сериализатор рецептов с ограниченным набором полей."""
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class AddRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор добавления рецептов в избранное/корзину."""
+
+    id = serializers.ReadOnlyField(source='recipe.id')
+    name = serializers.ReadOnlyField(source='recipe.name')
+    image = Base64ImageField(source='recipe.image')
+    cooking_time = serializers.ReadOnlyField(source='recipe.cooking_time')
 
     class Meta:
         model = Recipe

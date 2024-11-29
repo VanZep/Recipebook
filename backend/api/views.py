@@ -14,7 +14,7 @@ from recipes.models import (
 from .serializers import (
     UserAvatarSerializer, RecipeWriteSerializer, RecipeReadSerializer,
     IngredientSerializer, TagSerializer, SubscriptionSerializer,
-    RecipeShortSerializer
+    AddRecipeSerializer
 )
 
 
@@ -108,6 +108,16 @@ class UserViewSet(views.UserViewSet):
             {'detail': 'Вы не подписаны на данного автора'},
             status=HTTP_400_BAD_REQUEST
         )
+        # if self.is_exists:
+        #     subscription.delete()
+        #     return Response(status=HTTP_204_NO_CONTENT)
+        # return Response(
+        #     {'detail': 'Вы не подписаны на данного автора'},
+        #     status=HTTP_400_BAD_REQUEST
+        # )
+
+    def is_exists(self, user, model, obj):
+        return model.objects.filter(user=user, author=obj).exists()
 
     @action(methods=('get',), detail=False)
     def subscriptions(self, request):
@@ -123,19 +133,11 @@ class RecipeViewSet(ModelViewSet):
     """Представление рецептов."""
 
     queryset = Recipe.objects.all()
-    # serializer_class = RecipeWriteSerializer
-    # serializer_class = RecipeSerializer
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return RecipeReadSerializer
         return RecipeWriteSerializer
-
-    # def get_serializer_class(self):
-    #     actions = ['create', 'update', 'partial_update']
-    #     if self.action in actions:
-    #         return RecipeWriteSerializer
-    #     return super().get_serializer_class()
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -143,7 +145,6 @@ class RecipeViewSet(ModelViewSet):
     @action(methods=('post',), detail=True)
     def favorite(self, request, pk=None):
         """Добавление в избранное."""
-        # favorite_recipes = request.user.favorite_recipes.all()
         recipe = get_object_or_404(Recipe, pk=pk)
         if FavoriteRecipe.objects.filter(
             user=request.user, recipe=recipe
@@ -155,16 +156,16 @@ class RecipeViewSet(ModelViewSet):
             return Response(
                 {'detail': 'Нельзя добавить в избранное свой рецепт'}
             )
-        FavoriteRecipe.objects.create(
+        favorite_recipe = FavoriteRecipe.objects.create(
             user=request.user, recipe=recipe
         )
-        serializer = RecipeShortSerializer(
-            recipe, context={'request': request}
+        serializer = AddRecipeSerializer(
+            favorite_recipe, context={'request': request}
         )
         return Response(serializer.data, status=HTTP_201_CREATED)
 
     @favorite.mapping.delete
-    def delete_favorite(self, request, pk=None):
+    def delete_from_favorite(self, request, pk=None):
         """Удаление из избранного."""
         recipe = get_object_or_404(Recipe, pk=pk)
         favorite_recipe = FavoriteRecipe.objects.filter(
@@ -177,6 +178,16 @@ class RecipeViewSet(ModelViewSet):
             {'detail': 'У вас в избранном нет такого рецепта'},
             status=HTTP_400_BAD_REQUEST
         )
+        # if self.is_exists(request.user, FavoriteRecipe, recipe):
+        #     favorite_recipe.delete()
+        #     return Response(status=HTTP_204_NO_CONTENT)
+        # return Response(
+        #     {'detail': 'У вас в избранном нет такого рецепта'},
+        #     status=HTTP_400_BAD_REQUEST
+        # )
+
+    def is_exists(self, user, model, obj):
+        return model.objects.filter(user=user, recipe=obj).exists()
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
