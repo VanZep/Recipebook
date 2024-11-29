@@ -25,12 +25,18 @@ class Base64ImageField(serializers.ImageField):
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор пользователей."""
 
+    is_subscribed = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = (
             'email', 'id', 'username', 'first_name',
             'last_name', 'is_subscribed', 'avatar'
         )
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        return request.user.subscribers.filter(author=obj).exists()
 
 
 class UserAvatarSerializer(serializers.ModelSerializer):
@@ -209,18 +215,21 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         # )
 
     def get_recipe_objects(self, obj):
+        # print(obj)
         return Recipe.objects.filter(author=obj.author)
 
     def get_is_subscribed(self, obj):
-        # print(obj.user)
-        return Subscription.objects.filter(
-            user=obj.user.id, author=obj.author.id
-        ).exists()
+        # print(obj)
+        # return Subscription.objects.filter(
+        #     user=obj.user.id, author=obj.author.id
+        # ).exists()
+        # print(obj.user.subscribers.filter(author=obj.author))
+        return obj.user.subscribers.filter(author=obj.author).exists()
 
     def get_recipes(self, obj):
-        print()
-        print(obj.author.recipes.all())
-        print()
+        # print()
+        # print(obj.author.recipes.all())
+        # print()
         serializer = RecipeShortSerializer(
             self.get_recipe_objects(obj), many=True,
             context={'request': self.context.get('request')}

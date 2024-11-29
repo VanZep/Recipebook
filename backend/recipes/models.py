@@ -64,7 +64,7 @@ class Subscription(models.Model):
 
     user = models.ForeignKey(
         User, on_delete=models.CASCADE,
-        related_name='subscriber',
+        related_name='subscribers',
         verbose_name='Подписчик'
     )
     author = models.ForeignKey(
@@ -232,7 +232,7 @@ class ShoppingCart(models.Model):
         )
 
     def __str__(self):
-        return f'Рецепт - {self.recipe} в корзине {self.user}'
+        return f'Рецепт - {self.recipe} id={self.recipe.id} в корзине {self.user}'
 
 
 class IngredientRecipe(models.Model):

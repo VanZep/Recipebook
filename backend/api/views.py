@@ -3,6 +3,8 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
+from rest_framework.reverse import reverse
+
 from rest_framework.status import (
     HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 )
@@ -75,7 +77,9 @@ class UserViewSet(views.UserViewSet):
             user=request.user, author=author
         )
         # subscription.save()
-        serializer = SubscriptionSerializer(subscription)
+        serializer = SubscriptionSerializer(
+            subscription, context={'request': request}
+        )
         return Response(serializer.data, status=HTTP_201_CREATED)
         # sub = Subscription(user=request.user, author=author)
         # serializer = SubscribeSerializer(sub)
@@ -122,7 +126,8 @@ class UserViewSet(views.UserViewSet):
     @action(methods=('get',), detail=False)
     def subscriptions(self, request):
         """Список подписок."""
-        queryset = Subscription.objects.filter(user=request.user)
+        # queryset = Subscription.objects.filter(user=request.user)
+        queryset = request.user.subscribers.all()
         serializer = SubscriptionSerializer(
             queryset, many=True, context={'request': request}
         )
@@ -141,6 +146,21 @@ class RecipeViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    @action(
+        detail=True,
+        methods=('get',),
+        # permission_classes=[AllowAny],
+        url_path='get-link'
+    )
+    def get_link(self, request, pk=None):
+        """Получение короткой ссылки."""
+        recipe = get_object_or_404(Recipe, pk=pk)
+        link = reverse('short_url', args=[recipe.pk])
+        return Response(
+            {'short-link': request.build_absolute_uri(link)},
+            status=HTTP_200_OK
+        )
 
     @action(methods=('post',), detail=True)
     def favorite(self, request, pk=None):
@@ -225,6 +245,36 @@ class RecipeViewSet(ModelViewSet):
             {'detail': 'У вас в корзине нет такого рецепта'},
             status=HTTP_400_BAD_REQUEST
         )
+
+    @action(methods=('get',), detail=False)
+    def download_shopping_cart(self, request):
+        """Загрузка корзины ингредиентов."""
+        carts = ShoppingCart.objects.filter(user=request.user)
+        # <QuerySet [<ShoppingCart: Рецепт - Блюдо1 id=8 в корзине user1>]>
+        # recipes = request.user.user_recipes_in_cart.all()
+        # <QuerySet [<ShoppingCart: Рецепт - Блюдо1 id=8 в корзине user1>]>
+        print()
+        print('cart', carts)
+        print()
+        ingredient_dict = {}
+        for cart in carts:
+            print()
+            print('ingredients', cart.recipe.recipe_ingredients.all())
+            print()
+            ingredients = cart.recipe.recipe_ingredients.all()
+            for ingredient in ingredients:
+                if ingredient.ingredient.name in ingredient_dict:
+                    ingredient_dict[ingredient.ingredient.name] += ingredient.amount
+                else:
+                    ingredient_dict[ingredient.ingredient.name] = ingredient.amount
+
+                # print('ingredient_recipe', ingredient.amount)
+                # print()
+                # print('ingredient', ingredient.ingredient)
+                # print()
+                # ingredient_list.append(ingredient.ingredient.name)
+        print('ingredient_dict', ingredient_dict)
+        return Response(status=HTTP_200_OK)
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
