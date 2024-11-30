@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from core.constants import PAGE_SIZE
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-*4bu50^(i8-%3*pkgg__kvg6getabbigwwsa6&79*3!$b_zfh8'
@@ -103,6 +105,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE_QUERY_PARAM': 'limit',
+    'PAGE_SIZE': 2  # PAGE_SIZE
 }
 
 DJOSER = {

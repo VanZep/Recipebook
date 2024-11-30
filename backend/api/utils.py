@@ -24,3 +24,13 @@ def get_ingredients_in_shopping_cart(user):
             amount_sum=Sum('amount')
         )
     )
+
+
+def get_list_of_ingredients_string(ingredients):
+    """Формирование списка ингредиентов."""
+    return '\n'.join(
+        f'{i+1}.{ingredient.get("ingredient__name").capitalize()} - '
+        f'{ingredient.get("amount_sum")} '
+        f'({ingredient.get("ingredient__measurement_unit")})'
+        for i, ingredient in enumerate(ingredients)
+    )

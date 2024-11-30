@@ -5,21 +5,23 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from rest_framework.reverse import reverse
+from rest_framework.pagination import LimitOffsetPagination
 
 from rest_framework.status import (
-    HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
+    HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 )
 from djoser import views
 
-from .utils import get_ingredients_in_shopping_cart
 from recipes.models import (
-    Recipe, Ingredient, Tag, User, Subscription, FavoriteRecipe, ShoppingCart,
-    IngredientRecipe
+    User, Recipe, Ingredient, Tag, Subscription, FavoriteRecipe, ShoppingCart
 )
 from .serializers import (
     UserAvatarSerializer, RecipeWriteSerializer, RecipeReadSerializer,
     IngredientSerializer, TagSerializer, SubscriptionSerializer,
     AddRecipeSerializer
+)
+from .utils import (
+    get_ingredients_in_shopping_cart, get_list_of_ingredients_string
 )
 
 
@@ -30,6 +32,7 @@ class UserViewSet(views.UserViewSet):
     список подписок.
     """
 
+    # pagination_class = LimitOffsetPagination
     # @action(
     #     methods=('put', 'delete'),
     #     detail=False,
@@ -54,7 +57,7 @@ class UserViewSet(views.UserViewSet):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=HTTP_200_OK)
+        return Response(serializer.data)
 
     @avatar.mapping.delete
     def delete_avatar(self, request):
@@ -130,11 +133,11 @@ class UserViewSet(views.UserViewSet):
     def subscriptions(self, request):
         """Список подписок."""
         # queryset = Subscription.objects.filter(user=request.user)
-        queryset = request.user.subscribers.all()
+        subscriptions = request.user.subscribers.all()
         serializer = SubscriptionSerializer(
-            queryset, many=True, context={'request': request}
+            subscriptions, many=True, context={'request': request}
         )
-        return Response(serializer.data, status=HTTP_200_OK)
+        return Response(serializer.data)
 
 
 class RecipeViewSet(ModelViewSet):
@@ -161,8 +164,7 @@ class RecipeViewSet(ModelViewSet):
         recipe = get_object_or_404(Recipe, pk=pk)
         link = reverse('short_url', args=[recipe.pk])
         return Response(
-            {'short-link': request.build_absolute_uri(link)},
-            status=HTTP_200_OK
+            {'short-link': request.build_absolute_uri(link)}
         )
 
     @action(methods=('post',), detail=True)
@@ -252,52 +254,11 @@ class RecipeViewSet(ModelViewSet):
     @action(methods=('get',), detail=False)
     def download_shopping_cart(self, request):
         """Загрузка списка ингредиентов из корзины."""
-        # carts = ShoppingCart.objects.filter(user=request.user)
-        # <QuerySet [<ShoppingCart: Рецепт - Блюдо1 id=8 в корзине user1>]>
-        # recipes = request.user.user_recipes_in_cart.all()
-        # <QuerySet [<ShoppingCart: Рецепт - Блюдо1 id=8 в корзине user1>]>
-        # ingredients = (
-        #     IngredientRecipe.objects.filter(
-        #         recipe__recipes_in_cart__user=request.user)
-        #     .values('ingredient__name', 'ingredient__measurement_unit')
-        #     .annotate(amount_sum=Sum('amount'))
-        # )
         ingredients = get_ingredients_in_shopping_cart(request.user)
-        print()
-        print(ingredients)
-        count = 1
-        ingredient_list = []
-        for ingredient in ingredients:
-            print()
-            name = ingredient.get('ingredient__name').capitalize()
-            amount = ingredient.get('amount_sum')
-            measurement_unit = ingredient.get('ingredient__measurement_unit')
-            print(f'{count}.{name} - {amount} {measurement_unit}')
-            ingredient_list.append(
-                f'{count}.{name} - {amount} {measurement_unit}\n'
-            )
-            count += 1
-        print(ingredient_list)
-        # ingredient_dict = {}
-        # for cart in carts:
-        #     print()
-        #     print('ingredients', cart.recipe.recipe_ingredients.all())
-        #     print()
-        #     ingredients = cart.recipe.recipe_ingredients.all()
-        #     for ingredient in ingredients:
-        #         if ingredient.ingredient.name in ingredient_dict:
-        #             ingredient_dict[ingredient.ingredient.name] += ingredient.amount
-        #         else:
-        #             ingredient_dict[ingredient.ingredient.name] = ingredient.amount
-
-                # print('ingredient_recipe', ingredient.amount)
-                # print()
-                # print('ingredient', ingredient.ingredient)
-                # print()
-                # ingredient_list.append(ingredient.ingredient.name)
-        # print('ingredient_dict', ingredient_dict)
-        # return Response(status=HTTP_200_OK)
-        return FileResponse(ingredient_list, content_type='text/plain')
+        return FileResponse(
+            get_list_of_ingredients_string(ingredients),
+            filename='shopping_cart.txt'
+        )
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
@@ -307,6 +268,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('^name',)
+    pagination_class = None
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -314,3 +276,4 @@ class TagViewSet(ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    pagination_class = None
