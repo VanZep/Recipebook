@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.http import HttpResponse, FileResponse 
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -10,8 +11,10 @@ from rest_framework.status import (
 )
 from djoser import views
 
+from .utils import get_ingredients_in_shopping_cart
 from recipes.models import (
-    Recipe, Ingredient, Tag, User, Subscription, FavoriteRecipe, ShoppingCart
+    Recipe, Ingredient, Tag, User, Subscription, FavoriteRecipe, ShoppingCart,
+    IngredientRecipe
 )
 from .serializers import (
     UserAvatarSerializer, RecipeWriteSerializer, RecipeReadSerializer,
@@ -248,33 +251,53 @@ class RecipeViewSet(ModelViewSet):
 
     @action(methods=('get',), detail=False)
     def download_shopping_cart(self, request):
-        """Загрузка корзины ингредиентов."""
-        carts = ShoppingCart.objects.filter(user=request.user)
+        """Загрузка списка ингредиентов из корзины."""
+        # carts = ShoppingCart.objects.filter(user=request.user)
         # <QuerySet [<ShoppingCart: Рецепт - Блюдо1 id=8 в корзине user1>]>
         # recipes = request.user.user_recipes_in_cart.all()
         # <QuerySet [<ShoppingCart: Рецепт - Блюдо1 id=8 в корзине user1>]>
+        # ingredients = (
+        #     IngredientRecipe.objects.filter(
+        #         recipe__recipes_in_cart__user=request.user)
+        #     .values('ingredient__name', 'ingredient__measurement_unit')
+        #     .annotate(amount_sum=Sum('amount'))
+        # )
+        ingredients = get_ingredients_in_shopping_cart(request.user)
         print()
-        print('cart', carts)
-        print()
-        ingredient_dict = {}
-        for cart in carts:
+        print(ingredients)
+        count = 1
+        ingredient_list = []
+        for ingredient in ingredients:
             print()
-            print('ingredients', cart.recipe.recipe_ingredients.all())
-            print()
-            ingredients = cart.recipe.recipe_ingredients.all()
-            for ingredient in ingredients:
-                if ingredient.ingredient.name in ingredient_dict:
-                    ingredient_dict[ingredient.ingredient.name] += ingredient.amount
-                else:
-                    ingredient_dict[ingredient.ingredient.name] = ingredient.amount
+            name = ingredient.get('ingredient__name').capitalize()
+            amount = ingredient.get('amount_sum')
+            measurement_unit = ingredient.get('ingredient__measurement_unit')
+            print(f'{count}.{name} - {amount} {measurement_unit}')
+            ingredient_list.append(
+                f'{count}.{name} - {amount} {measurement_unit}\n'
+            )
+            count += 1
+        print(ingredient_list)
+        # ingredient_dict = {}
+        # for cart in carts:
+        #     print()
+        #     print('ingredients', cart.recipe.recipe_ingredients.all())
+        #     print()
+        #     ingredients = cart.recipe.recipe_ingredients.all()
+        #     for ingredient in ingredients:
+        #         if ingredient.ingredient.name in ingredient_dict:
+        #             ingredient_dict[ingredient.ingredient.name] += ingredient.amount
+        #         else:
+        #             ingredient_dict[ingredient.ingredient.name] = ingredient.amount
 
                 # print('ingredient_recipe', ingredient.amount)
                 # print()
                 # print('ingredient', ingredient.ingredient)
                 # print()
                 # ingredient_list.append(ingredient.ingredient.name)
-        print('ingredient_dict', ingredient_dict)
-        return Response(status=HTTP_200_OK)
+        # print('ingredient_dict', ingredient_dict)
+        # return Response(status=HTTP_200_OK)
+        return FileResponse(ingredient_list, content_type='text/plain')
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
