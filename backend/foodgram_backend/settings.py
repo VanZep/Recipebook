@@ -110,6 +110,7 @@ REST_FRAMEWORK = {
 }
 
 DJOSER = {
+    'LOGIN_FIELD': 'email',
     'SET_PASSWORD_RETYPE': True,
     'LOGOUT_ON_PASSWORD_CHANGE': True,
     'HIDE_USERS': False,
@@ -118,6 +119,7 @@ DJOSER = {
         'current_user': 'api.serializers.UserSerializer',
     },
     'PERMISSIONS': {
-        'user': ('djoser.permissions.CurrentUserOrAdminOrReadOnly',),
+        'user': ('rest_framework.permissions.IsAuthenticatedOrReadOnly',),
+        'user_list': ('rest_framework.permissions.IsAuthenticatedOrReadOnly',),
     },
 }

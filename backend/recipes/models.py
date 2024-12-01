@@ -1,7 +1,7 @@
 from django.db import models
-from django.db.models.constraints import CheckConstraint
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
+from django.contrib.auth.validators import ASCIIUsernameValidator
 
 from core.models import NameModel
 from core.constants import (
@@ -17,11 +17,16 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=USER_CHARFIELD_MAX_LENGTH,
         unique=True,
+        blank=False,
+        null=False,
         verbose_name='Юзернейм',
+        validators=(ASCIIUsernameValidator(),)
     )
     email = models.EmailField(
         max_length=EMAILFIELD_MAX_LENGTH,
         unique=True,
+        blank=False,
+        null=False,
         verbose_name='Почта'
     )
     first_name = models.CharField(
@@ -36,14 +41,10 @@ class User(AbstractUser):
         max_length=USER_CHARFIELD_MAX_LENGTH,
         verbose_name='Пароль'
     )
-    is_subscribed = models.BooleanField(
-        default=False,
-        verbose_name='Флаг подписки'
-    )
     avatar = models.ImageField(
         upload_to='users/',
-        blank=True,
         null=True,
+        default=None,
         verbose_name='Аватар'
     )
 
@@ -53,7 +54,7 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'Пользователи'
-        ordering = ('id',)
+        ordering = ('username',)
 
     def __str__(self):
         return self.username
@@ -81,10 +82,6 @@ class Subscription(models.Model):
                 fields=('user', 'author'),
                 name='unique_user_author'
             ),
-            # CheckConstraint(
-            #     check=~models.Q(author=models.F('user')),
-            #     name='author_not_equals_user'
-            # )
         )
 
     def __str__(self):
@@ -119,7 +116,6 @@ class Ingredient(NameModel):
     class Meta:
         verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        # ordering = ('name',)
 
     def __str__(self):
         return self.name
@@ -156,7 +152,7 @@ class Recipe(NameModel):
         validators=(
             MinValueValidator(
                 MIN_TIME,
-                f'Минимальное время приготовления {MIN_TIME} минута.'
+                f'Минимальное время приготовления {MIN_TIME} (мин).'
             ),
         ),
         verbose_name='Время приготовления'
@@ -181,7 +177,7 @@ class FavoriteRecipe(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='recipe_favorites',
+        related_name='recipes_in_favorite',
         verbose_name='Рецепт'
     )
     user = models.ForeignKey(
@@ -217,7 +213,7 @@ class ShoppingCart(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='user_recipes_in_cart',
+        related_name='recipes_in_cart',
         verbose_name='Пользователь'
     )
 
@@ -232,7 +228,7 @@ class ShoppingCart(models.Model):
         )
 
     def __str__(self):
-        return f'Рецепт - {self.recipe} id={self.recipe.id} в корзине {self.user}'
+        return f'Рецепт - {self.recipe} в корзине {self.user}'
 
 
 class IngredientRecipe(models.Model):

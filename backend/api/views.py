@@ -5,12 +5,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from rest_framework.reverse import reverse
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 
 from rest_framework.status import (
     HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 )
 from djoser import views
 
+from .permissions import IsAuthenticatedOrIsAuthorOrReadOnly
 from recipes.models import (
     User, Recipe, Ingredient, Tag, Subscription, FavoriteRecipe, ShoppingCart
 )
@@ -31,6 +33,7 @@ class UserViewSet(views.UserViewSet):
     список подписок.
     """
 
+    # permission_classes = AllowAny,
     # pagination_class = LimitOffsetPagination
     # @action(
     #     methods=('put', 'delete'),
@@ -128,7 +131,9 @@ class UserViewSet(views.UserViewSet):
     def is_exists(self, user, model, obj):
         return model.objects.filter(user=user, author=obj).exists()
 
-    @action(methods=('get',), detail=False)
+    @action(
+        methods=('get',), detail=False, permission_classes=(IsAuthenticated,)
+    )
     def subscriptions(self, request):
         """Список подписок."""
         subscriptions = request.user.subscribers.all()
@@ -143,6 +148,7 @@ class RecipeViewSet(ModelViewSet):
     """Представление рецептов."""
 
     queryset = Recipe.objects.all()
+    permission_classes = (IsAuthenticatedOrIsAuthorOrReadOnly,)
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -153,10 +159,8 @@ class RecipeViewSet(ModelViewSet):
         serializer.save(author=self.request.user)
 
     @action(
-        detail=True,
-        methods=('get',),
-        # permission_classes=[AllowAny],
-        url_path='get-link'
+        methods=('get',), detail=True, url_path='get-link',
+        permission_classes=(IsAuthenticated,),
     )
     def get_link(self, request, pk=None):
         """Получение короткой ссылки."""
@@ -250,7 +254,9 @@ class RecipeViewSet(ModelViewSet):
             status=HTTP_400_BAD_REQUEST
         )
 
-    @action(methods=('get',), detail=False)
+    @action(
+        methods=('get',), detail=False, permission_classes=(IsAuthenticated,)
+    )
     def download_shopping_cart(self, request):
         """Загрузка списка ингредиентов из корзины."""
         ingredients = get_ingredients_in_shopping_cart(request.user)
@@ -268,6 +274,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     filter_backends = (SearchFilter,)
     search_fields = ('^name',)
     pagination_class = None
+    permission_classes = (IsAdminUser,)
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -276,3 +283,4 @@ class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
+    permission_classes = (IsAdminUser,)
