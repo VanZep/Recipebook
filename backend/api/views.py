@@ -1,11 +1,10 @@
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponse, FileResponse 
+from django.http import FileResponse
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from rest_framework.reverse import reverse
-from rest_framework.pagination import LimitOffsetPagination
 
 from rest_framework.status import (
     HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
@@ -132,12 +131,12 @@ class UserViewSet(views.UserViewSet):
     @action(methods=('get',), detail=False)
     def subscriptions(self, request):
         """Список подписок."""
-        # queryset = Subscription.objects.filter(user=request.user)
         subscriptions = request.user.subscribers.all()
+        pages = self.paginate_queryset(subscriptions)
         serializer = SubscriptionSerializer(
-            subscriptions, many=True, context={'request': request}
+            pages, many=True, context={'request': request}
         )
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
 
 class RecipeViewSet(ModelViewSet):
