@@ -4,14 +4,17 @@ from django.views.decorators.http import require_GET
 from django.core.exceptions import ValidationError
 
 from recipes.models import Recipe, IngredientRecipe
+from .validators import is_not_exists_objects_validator
 
 
-@require_GET
-def short_url(request, pk):
-
-    if Recipe.objects.filter(pk=pk).exists():
-        return redirect(f'/recipes/{pk}/')
-    raise ValidationError({'detail': 'Рецепт не найден'})
+# @require_GET
+def get_short_url(request, pk):
+    """Получение короткой ссылки на рецепт."""
+    recipes = Recipe.objects.filter(pk=pk)
+    is_not_exists_objects_validator(recipes, 'Рецепт не найден')
+    # if Recipe.objects.filter(pk=pk).exists():
+    return redirect(f'/recipes/{pk}/')
+    # raise ValidationError({'detail': 'Рецепт не найден'})
 
 
 def get_ingredients_in_shopping_cart(user):

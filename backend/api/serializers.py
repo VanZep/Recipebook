@@ -220,6 +220,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     def get_recipe_objects(self, obj):
         # print(obj)
         return Recipe.objects.filter(author=obj.author)
+        # return obj.author.recipes.all()
 
     def get_is_subscribed(self, obj):
         # print(obj)
