@@ -8,6 +8,7 @@ from recipes.models import (
     User, Recipe, Ingredient, IngredientRecipe, Tag,
     Subscription, FavoriteRecipe, ShoppingCart
 )
+from .utils import is_subscribed
 
 
 class Base64ImageField(serializers.ImageField):
@@ -36,9 +37,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
+        # return bool(
+        #     user and user.is_authenticated
+        #     and user.subscribers.filter(author=obj).exists()
+        # )
         return bool(
             user and user.is_authenticated
-            and user.subscribers.filter(author=obj).exists()
+            and is_subscribed(user, obj)
         )
 
 
@@ -158,17 +163,36 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'name', 'image', 'text', 'cooking_time'
         )
 
+    def get_user(self):
+        print(self.context.get('request').user)
+        print(Recipe.objects.all().count())
+        return self.context.get('request').user
+
     def get_is_favorited(self, obj):
-        request = self.context.get('request')
-        return FavoriteRecipe.objects.filter(
-            user=request.user, recipe=obj
-        ).exists()
+        user = self.get_user()
+        # user = self.context.get('request').user
+        # user = self.get_user()
+        # return FavoriteRecipe.objects.filter(
+        #     user=user, recipe=obj
+        # ).exists()
+        return bool(
+            user and user.is_authenticated
+            and user.favorite_recipes.filter(recipe=obj).exists()
+        )
+        # return self.get_user().favorite_recipes.filter(recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
-        request = self.context.get('request')
-        return ShoppingCart.objects.filter(
-            user=request.user, recipe=obj
-        ).exists()
+        user = self.get_user()
+        # user = self.context.get('request').user
+        # return ShoppingCart.objects.filter(
+        #     user=user, recipe=obj
+        # ).exists()
+        # return user.recipes_in_cart.filter(recipe=obj).exists()
+        return bool(
+            user and user.is_authenticated
+            and user.recipes_in_cart.filter(recipe=obj).exists()
+        )
+        # return self.get_user().recipes_in_cart.filter(recipe=obj).exists()
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
@@ -219,8 +243,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     def get_recipe_objects(self, obj):
         # print(obj)
-        return Recipe.objects.filter(author=obj.author)
-        # return obj.author.recipes.all()
+        # return Recipe.objects.filter(author=obj.author)
+        return obj.author.recipes.all()
 
     def get_is_subscribed(self, obj):
         # print(obj)
@@ -228,17 +252,23 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         #     user=obj.user.id, author=obj.author.id
         # ).exists()
         # print(obj.user.subscribers.filter(author=obj.author))
-        return obj.user.subscribers.filter(author=obj.author).exists()
+        # return obj.user.subscribers.filter(author=obj.author).exists()
+        return is_subscribed(obj.user, obj.author)
 
     def get_recipes(self, obj):
         # print()
         # print(obj.author.recipes.all())
         # print()
-        serializer = RecipeShortSerializer(
-            self.get_recipe_objects(obj), many=True,
-            context={'request': self.context.get('request')}
+        # serializer = RecipeShortSerializer(
+        #     self.get_recipe_objects(obj), many=True,
+        #     context={'request': self.context.get('request')}
+        # )
+        return (
+            RecipeShortSerializer(
+                self.get_recipe_objects(obj), many=True,
+                context={'request': self.context.get('request')}
+            ).data
         )
-        return serializer.data
 
     # def get_recipes(self, obj):
     #     recipes = Recipe.objects.filter(author=obj.author.id)

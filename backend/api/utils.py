@@ -7,6 +7,18 @@ from recipes.models import Recipe, IngredientRecipe
 from .validators import is_not_exists_objects_validator
 
 
+def is_subscribed(user, author):
+    """"""
+    return user.subscribers.filter(author=author).exists()
+
+
+# def is_exists_objects(model, user, obj):
+#     """Функция проверки, что объекты существуют."""
+#     return model.objects.filter(
+#         user=user, recipe=obj
+#     ).exists()
+
+
 # @require_GET
 def get_short_url(request, pk):
     """Получение короткой ссылки на рецепт."""
