@@ -13,7 +13,7 @@ def is_not_exists_objects_validator(obj, message):
         raise ValidationError({'detail': message})
 
 
-def user_is_author(user, author, message):
+def user_is_author_validator(user, author, message):
     """Валидатор проверки, что пользователь есть автор объекта."""
     if user == author:
         raise ValidationError({'detail': message})

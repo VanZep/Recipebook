@@ -2,11 +2,9 @@ import base64
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
-
 from recipes.models import (
-    User, Recipe, Ingredient, IngredientRecipe, Tag,
-    Subscription, FavoriteRecipe, ShoppingCart
+    User, Recipe, Ingredient, Tag,
+    IngredientRecipe, Subscription
 )
 from .utils import is_subscribed
 
@@ -37,10 +35,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
-        # return bool(
-        #     user and user.is_authenticated
-        #     and user.subscribers.filter(author=obj).exists()
-        # )
         return bool(
             user and user.is_authenticated
             and is_subscribed(user, obj)
@@ -113,14 +107,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 amount=ingredient.get('amount')
             )
         recipe.tags.set(tags)
-        # print()
-        # print(tags)
-        # print()
-        # instance.ingredients.set(*ingredients)
-        # recipes.ingredients.add(
-        #     current_ingredient,
-        #     through_defaults={'amount': amount}
-        # )
         return recipe
 
     def create(self, validated_data):
@@ -164,35 +150,21 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         )
 
     def get_user(self):
-        print(self.context.get('request').user)
-        print(Recipe.objects.all().count())
         return self.context.get('request').user
 
     def get_is_favorited(self, obj):
         user = self.get_user()
-        # user = self.context.get('request').user
-        # user = self.get_user()
-        # return FavoriteRecipe.objects.filter(
-        #     user=user, recipe=obj
-        # ).exists()
         return bool(
             user and user.is_authenticated
             and user.favorite_recipes.filter(recipe=obj).exists()
         )
-        # return self.get_user().favorite_recipes.filter(recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
         user = self.get_user()
-        # user = self.context.get('request').user
-        # return ShoppingCart.objects.filter(
-        #     user=user, recipe=obj
-        # ).exists()
-        # return user.recipes_in_cart.filter(recipe=obj).exists()
         return bool(
             user and user.is_authenticated
             and user.recipes_in_cart.filter(recipe=obj).exists()
         )
-        # return self.get_user().recipes_in_cart.filter(recipe=obj).exists()
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
@@ -235,34 +207,14 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             'email', 'id', 'username', 'first_name', 'last_name',
             'is_subscribed', 'recipes', 'recipes_count', 'avatar'
         )
-        # fields = '__all__'
-        # read_only_fields = (
-        #     'email', 'id', 'username', 'first_name', 'last_name',
-        #     'is_subscribed', 'recipes', 'recipes_count', 'avatar'
-        # )
 
     def get_recipe_objects(self, obj):
-        # print(obj)
-        # return Recipe.objects.filter(author=obj.author)
         return obj.author.recipes.all()
 
     def get_is_subscribed(self, obj):
-        # print(obj)
-        # return Subscription.objects.filter(
-        #     user=obj.user.id, author=obj.author.id
-        # ).exists()
-        # print(obj.user.subscribers.filter(author=obj.author))
-        # return obj.user.subscribers.filter(author=obj.author).exists()
         return is_subscribed(obj.user, obj.author)
 
     def get_recipes(self, obj):
-        # print()
-        # print(obj.author.recipes.all())
-        # print()
-        # serializer = RecipeShortSerializer(
-        #     self.get_recipe_objects(obj), many=True,
-        #     context={'request': self.context.get('request')}
-        # )
         return (
             RecipeShortSerializer(
                 self.get_recipe_objects(obj), many=True,
@@ -270,39 +222,5 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             ).data
         )
 
-    # def get_recipes(self, obj):
-    #     recipes = Recipe.objects.filter(author=obj.author.id)
-    #     serializer = RecipeShortSerializer(recipes, many=True)
-    #     return serializer.data
-
     def get_recipes_count(self, obj):
-        # print(obj.user)
         return self.get_recipe_objects(obj).count()
-
-
-# class SubscribeSerializer(serializers.ModelSerializer):
-#     """Сериализатор подписок."""
-
-#     user = serializers.SlugRelatedField(
-#         queryset=User.objects.all(), slug_field='id',
-#         default=serializers.CurrentUserDefault()
-#     )
-#     author = serializers.SlugRelatedField(
-#         queryset=User.objects.all(), slug_field='id'
-#     )
-
-#     class Meta:
-#         model = Subscription
-#         fields = ('user', 'author')
-#         validators = [
-#             UniqueTogetherValidator(
-#                 queryset=Subscription.objects.all(),
-#                 fields=('user', 'author'),
-#                 message='Вы уже подписаны на данного автора'
-#             )
-#         ]
-
-#     def validate_user(self, value):
-#         if self.initial_data.get('author') == value.id:
-#             raise serializers.ValidationError('Нельзя подписаться на себя')
-#         return value

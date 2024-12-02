@@ -57,7 +57,7 @@ class User(AbstractUser):
         ordering = ('username',)
 
     def __str__(self):
-        return self.username
+        return f'Пользователь - {self.username}'
 
 
 class Subscription(models.Model):
@@ -85,7 +85,7 @@ class Subscription(models.Model):
         )
 
     def __str__(self):
-        return f'{self.user} подписан на {self.author}'
+        return f'Пользователь - {self.user} подписан на автора - {self.author}'
 
 
 class Tag(NameModel):
@@ -102,7 +102,7 @@ class Tag(NameModel):
         verbose_name_plural = 'Теги'
 
     def __str__(self):
-        return self.name
+        return f'Тег - {self.name}'
 
 
 class Ingredient(NameModel):
@@ -118,7 +118,7 @@ class Ingredient(NameModel):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
-        return self.name
+        return f'Ингредиент - {self.name}'
 
 
 class Recipe(NameModel):
@@ -168,7 +168,7 @@ class Recipe(NameModel):
         ordering = ('-pub_date',)
 
     def __str__(self):
-        return self.name
+        return f'Рецепт - {self.name}'
 
 
 class FavoriteRecipe(models.Model):
@@ -198,7 +198,7 @@ class FavoriteRecipe(models.Model):
         )
 
     def __str__(self):
-        return f'Избранный рецепт - {self.recipe} для {self.user}'
+        return f'Избранный рецепт - {self.recipe} пользователя - {self.user}'
 
 
 class ShoppingCart(models.Model):
@@ -228,7 +228,7 @@ class ShoppingCart(models.Model):
         )
 
     def __str__(self):
-        return f'Рецепт - {self.recipe} в корзине {self.user}'
+        return f'Рецепт - {self.recipe} в корзине пользователя - {self.user}'
 
 
 class IngredientRecipe(models.Model):

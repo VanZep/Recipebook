@@ -15,7 +15,7 @@ from recipes.models import (
 from .permissions import IsAuthenticatedOrIsAuthorOrReadOnly
 from .validators import (
     is_exists_objects_validator, is_not_exists_objects_validator,
-    user_is_author
+    user_is_author_validator
 )
 from .serializers import (
     UserAvatarSerializer, RecipeWriteSerializer, RecipeReadSerializer,
@@ -34,23 +34,9 @@ class UserViewSet(views.UserViewSet):
     список подписок.
     """
 
-    # permission_classes = AllowAny,
-    # pagination_class = LimitOffsetPagination
-    # @action(
-    #     methods=('put', 'delete'),
-    #     detail=False,
-    #     url_path='me/avatar'
-    # )
-    # def set_avatar(self, request, pk=None):
-    #     """Настройка аватара пользователя."""
-    #     user = request.user
-    #     if request.method == 'PUT':
-    #         serializer = UserAvatarSerializer(user, data=request.data)
-    #         serializer.is_valid(raise_exception=True)
-    #         serializer.save()
-    #         return Response(serializer.data, status=HTTP_200_OK)
-    #     user.avatar.delete()
-    #     return Response(status=HTTP_204_NO_CONTENT)
+    def get_subscription_objects(self, user, author):
+        """Получение подписок."""
+        return author.subscribing.filter(user=user)
 
     @action(methods=('put',), detail=False, url_path='me/avatar')
     def avatar(self, request):
@@ -73,75 +59,29 @@ class UserViewSet(views.UserViewSet):
         """Добавление подписки."""
         user = request.user
         author = get_object_or_404(User, id=id)
-        # if Subscription.objects.filter(
-        #     user=user, author=author
-        # ).exists():
-        #     return Response(
-        #         {'detail': 'Вы уже подписаны на данного автора'}
-        #     )
-        subscriptions = Subscription.objects.filter(
+        is_exists_objects_validator(
+            self.get_subscription_objects(user, author),
+            'Вы уже подписаны на данного автора'
+        )
+        user_is_author_validator(user, author, 'Нельзя подписаться на себя')
+        subscription = Subscription.objects.create(
             user=user, author=author
         )
-        is_exists_objects_validator(
-            subscriptions, 'Вы уже подписаны на данного автора'
-        )
-        # if user == author:
-        #     return Response(
-        #         {'detail': 'Нельзя подписаться на себя'}
-        #     )
-        user_is_author(user, author, 'Нельзя подписаться на себя')
-        subscription = Subscription.objects.create(
-            user=request.user, author=author
-        )
-        # subscription.save()
         serializer = SubscriptionSerializer(
             subscription, context={'request': request}
         )
         return Response(serializer.data, status=HTTP_201_CREATED)
-        # sub = Subscription(user=request.user, author=author)
-        # serializer = SubscribeSerializer(sub)
-        # sub.save()
-        # serializer = SubscribeSerializer(
-        #     data={'author': author.id, 'user': request.user.id}
-        # )
-        # serializer.is_valid(raise_exception=True)
-        # serializer.save()
-        # author.is_subscribed = True
-        # author.save()
-        # return Response(
-        #     SubscriptionSerializer(author).data, status=HTTP_201_CREATED
-        # )
-        # return Response(
-        #     serializer.data, status=HTTP_201_CREATED
-        # )
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id=None):
         """Удаление подписки."""
         author = get_object_or_404(User, id=id)
-        subscriptions = Subscription.objects.filter(
-            user=request.user.id, author=author.id
-        )
-        # if subscriptions.exists():
+        subscriptions = self.get_subscription_objects(request.user, author)
         is_not_exists_objects_validator(
             subscriptions, 'Вы не подписаны на данного автора'
         )
         subscriptions.delete()
         return Response(status=HTTP_204_NO_CONTENT)
-        # return Response(
-        #     {'detail': 'Вы не подписаны на данного автора'},
-        #     status=HTTP_400_BAD_REQUEST
-        # )
-        # if self.is_exists:
-        #     subscription.delete()
-        #     return Response(status=HTTP_204_NO_CONTENT)
-        # return Response(
-        #     {'detail': 'Вы не подписаны на данного автора'},
-        #     status=HTTP_400_BAD_REQUEST
-        # )
-
-    def is_exists(self, user, model, obj):
-        return model.objects.filter(user=user, author=obj).exists()
 
     @action(
         methods=('get',), detail=False, permission_classes=(IsAuthenticated,)
@@ -170,6 +110,14 @@ class RecipeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    def get_favorite_recipe_objects(self, user, recipe):
+        """Получение избранных рецептов."""
+        return user.favorite_recipes.filter(recipe=recipe)
+
+    def get_shopping_cart_objects(self, user, recipe):
+        """Получение рецептов, находящихся в корзине покупок."""
+        return user.recipes_in_cart.filter(recipe=recipe)
+
     @action(
         methods=('get',), detail=True, url_path='get-link',
         permission_classes=(IsAuthenticated,),
@@ -187,24 +135,11 @@ class RecipeViewSet(ModelViewSet):
         """Добавление в избранное."""
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
-        # if FavoriteRecipe.objects.filter(
-        #     user=request.user, recipe=recipe
-        # ).exists():
-        #     return Response(
-        #         {'detail': 'Данный рецепт уже находится у вас в избранном'}
-        #     )
-        favorite_recipes = FavoriteRecipe.objects.filter(
-            user=user, recipe=recipe
-        )
         is_exists_objects_validator(
-            favorite_recipes,
+            self.get_favorite_recipe_objects(user, recipe),
             'Данный рецепт уже находится у вас в избранном'
         )
-        # if request.user == recipe.author:
-        #     return Response(
-        #         {'detail': 'Нельзя добавить в избранное свой рецепт'}
-        #     )
-        user_is_author(
+        user_is_author_validator(
             user, recipe.author,
             'Нельзя добавить в избранное свой рецепт'
         )
@@ -220,50 +155,25 @@ class RecipeViewSet(ModelViewSet):
     def delete_from_favorite(self, request, pk=None):
         """Удаление из избранного."""
         recipe = get_object_or_404(Recipe, pk=pk)
-        favorite_recipes = FavoriteRecipe.objects.filter(
-            user=request.user, recipe=recipe
+        favorite_recipes = self.get_favorite_recipe_objects(
+            request.user, recipe
         )
         is_not_exists_objects_validator(
             favorite_recipes, 'У вас в избранном нет такого рецепта'
         )
-        # if favorite_recipes.exists():
         favorite_recipes.delete()
         return Response(status=HTTP_204_NO_CONTENT)
-        # return Response(
-        #     {'detail': 'У вас в избранном нет такого рецепта'},
-        #     status=HTTP_400_BAD_REQUEST
-        # )
-        # if self.is_exists(request.user, FavoriteRecipe, recipe):
-        #     favorite_recipe.delete()
-        #     return Response(status=HTTP_204_NO_CONTENT)
-        # return Response(
-        #     {'detail': 'У вас в избранном нет такого рецепта'},
-        #     status=HTTP_400_BAD_REQUEST
-        # )
 
     @action(methods=('post',), detail=True)
     def shopping_cart(self, request, pk=None):
         """Добавление в корзину."""
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
-        # if ShoppingCart.objects.filter(
-        #     user=request.user, recipe=recipe
-        # ).exists():
-        #     return Response(
-        #         {'detail': 'Данный рецепт уже находится у вас в корзине'}
-        #     )
-        shopping_cart_recipes = ShoppingCart.objects.filter(
-            user=user, recipe=recipe
-        )
         is_exists_objects_validator(
-            shopping_cart_recipes,
+            self.get_shopping_cart_objects(user, recipe),
             'Данный рецепт уже находится у вас в корзине'
         )
-        # if request.user == recipe.author:
-        #     return Response(
-        #         {'detail': 'Нельзя добавить в корзину свой рецепт'}
-        #     )
-        user_is_author(
+        user_is_author_validator(
             user, recipe.author,
             'Нельзя добавить в корзину свой рецепт'
         )
@@ -279,19 +189,15 @@ class RecipeViewSet(ModelViewSet):
     def delete_from_shopping_cart(self, request, pk=None):
         """Удаление из корзины."""
         recipe = get_object_or_404(Recipe, pk=pk)
-        shopping_cart_recipes = ShoppingCart.objects.filter(
-            user=request.user, recipe=recipe
+        shopping_cart_recipes = self.get_shopping_cart_objects(
+            request.user, recipe
         )
         is_not_exists_objects_validator(
-            shopping_cart_recipes, 'У вас в корзине нет такого рецепта'
+            shopping_cart_recipes,
+            'У вас в корзине нет такого рецепта'
         )
-        # if shopping_cart_recipe.exists():
         shopping_cart_recipes.delete()
         return Response(status=HTTP_204_NO_CONTENT)
-        # return Response(
-        #     {'detail': 'У вас в корзине нет такого рецепта'},
-        #     status=HTTP_400_BAD_REQUEST
-        # )
 
     @action(
         methods=('get',), detail=False, permission_classes=(IsAuthenticated,)
@@ -312,7 +218,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     filter_backends = (SearchFilter,)
-    search_fields = ('^name',)
+    search_fields = ('^name', 'name')
     pagination_class = None
     permission_classes = (IsAdminUser,)
 
