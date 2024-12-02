@@ -13,6 +13,7 @@ from rest_framework.status import (
 from djoser import views
 
 from .permissions import IsAuthenticatedOrIsAuthorOrReadOnly
+from .validators import is_exists_objects_validator
 from recipes.models import (
     User, Recipe, Ingredient, Tag, Subscription, FavoriteRecipe, ShoppingCart
 )
@@ -260,6 +261,7 @@ class RecipeViewSet(ModelViewSet):
     def download_shopping_cart(self, request):
         """Загрузка списка ингредиентов из корзины."""
         ingredients = get_ingredients_in_shopping_cart(request.user)
+        is_exists_objects_validator(ingredients)
         return FileResponse(
             get_list_of_ingredients_string(ingredients),
             filename='shopping_cart.txt'
