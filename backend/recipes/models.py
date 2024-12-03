@@ -85,7 +85,7 @@ class Subscription(models.Model):
         )
 
     def __str__(self):
-        return f'Пользователь - {self.user} подписан на автора - {self.author}'
+        return f'{self.user} подписан на {self.author}'
 
 
 class Tag(NameModel):
@@ -120,7 +120,7 @@ class Ingredient(NameModel):
         ordering = ('name',)
 
     def __str__(self):
-        return f'Ингредиент - {self.name}'
+        return self.name
 
 
 class Recipe(NameModel):
@@ -200,7 +200,7 @@ class FavoriteRecipe(models.Model):
         )
 
     def __str__(self):
-        return f'Избранный рецепт - {self.recipe} пользователя - {self.user}'
+        return f'Избранный {self.recipe} для {self.user}'
 
 
 class ShoppingCart(models.Model):
@@ -230,7 +230,7 @@ class ShoppingCart(models.Model):
         )
 
     def __str__(self):
-        return f'Рецепт - {self.recipe} в корзине пользователя - {self.user}'
+        return f'{self.recipe} в корзине {self.user}'
 
 
 class IngredientRecipe(models.Model):
@@ -269,4 +269,4 @@ class IngredientRecipe(models.Model):
         )
 
     def __str__(self):
-        return f'{self.ingredient} для рецепта - {self.recipe}'
+        return f'{self.ingredient} для {self.recipe}'
