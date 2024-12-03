@@ -7,6 +7,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser import views
 
 from recipes.models import (
@@ -101,6 +102,8 @@ class RecipeViewSet(ModelViewSet):
 
     queryset = Recipe.objects.all()
     permission_classes = (IsAuthenticatedOrIsAuthorOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('tags',)
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
