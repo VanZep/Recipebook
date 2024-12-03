@@ -30,12 +30,19 @@ class Command(BaseCommand):
                     data = json.loads(file.read())
                     not_create_count = 0
                     for i, item in enumerate(data):
-                        obj, is_create = model.objects.get_or_create(**item)
-                        if not is_create:
-                            not_create_count += 1
-                            self.stdout.write(self.style.NOTICE(
-                                f'{obj} - такой объект уже есть в БД'
-                            ))
+                        if model == User:
+                            password = item.pop('password')
+                            user = User.objects.filter(**item)
+                            if not user.exists():
+                                User.objects.create_user(
+                                    **item, password=password
+                                )
+                            else:
+                                not_create_count += 1
+                        else:
+                            _, is_create = model.objects.get_or_create(**item)
+                            if not is_create:
+                                not_create_count += 1
                     success_message_list.append(
                         f'Загружено {i + 1 - not_create_count} '
                         f'объектов для модели {model_name}'
