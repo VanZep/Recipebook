@@ -1,0 +1,3 @@
+[{"username": "Admin", "email": "Admin@mail.not", "first_name": "Admin", "last_name": "Admin", "password": "Admin", "is_superuser": "True", "is_staff": "True"}, 
+{"username": "Alex", "email": "alex@mail.not", "first_name": "Alexander", "last_name": "Alexeev", "password": "Alex_12345"},
+{"username": "Johnny", "email": "johnny@mail.not", "first_name": "John", "last_name": "Bonjovi", "password": "Johnny_12345"}]
