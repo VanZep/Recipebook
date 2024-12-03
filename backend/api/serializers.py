@@ -120,17 +120,19 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Нужно выбрать хотя бы один ингредиент'
             )
-        print()
-        print(value, len(value))
-        print()
         ingredients_id_list = [
             item.get('ingredient').get('id') for item in value
         ]
-        print(set(ingredients_id_list))
-        print()
         if len(ingredients_id_list) != len(set(ingredients_id_list)):
             raise serializers.ValidationError(
                 'Каждый ингредиент можно выбрать только один раз'
+            )
+        return value
+
+    def validate_tags(self, value):
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError(
+                'Каждый тег можно выбрать только один раз'
             )
         return value
 
