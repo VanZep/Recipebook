@@ -5,11 +5,6 @@ from recipes.models import Recipe, IngredientRecipe
 from .validators import is_not_exists_objects_validator
 
 
-def is_subscribed(user, author):
-    """Функция проверки подписки."""
-    return user.subscribers.filter(author=author).exists()
-
-
 def get_short_url(request, pk):
     """Получение короткой ссылки на рецепт."""
     recipes = Recipe.objects.filter(pk=pk)

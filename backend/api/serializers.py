@@ -4,6 +4,7 @@ from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from recipes.models import User, Recipe, Ingredient, Tag, IngredientRecipe
+from .validators import is_not_selected_validator, only_one_selected_validator
 
 
 class Base64ImageField(serializers.ImageField):
@@ -14,7 +15,6 @@ class Base64ImageField(serializers.ImageField):
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
         return super().to_internal_value(data)
 
 
@@ -150,26 +150,20 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         return self.create_update_recipe(validated_data, instance)
 
-    def validate_ingredients(self, value):
-        if not value:
-            raise serializers.ValidationError(
-                'Нужно выбрать хотя бы один ингредиент'
-            )
+    def validate_ingredients(self, ingredients):
+        name = 'ингредиент'
+        is_not_selected_validator(ingredients, name)
         ingredients_id_list = [
-            item.get('ingredient').get('id') for item in value
+            item.get('ingredient').get('id') for item in ingredients
         ]
-        if len(ingredients_id_list) != len(set(ingredients_id_list)):
-            raise serializers.ValidationError(
-                'Каждый ингредиент можно выбрать только один раз'
-            )
-        return value
+        only_one_selected_validator(ingredients_id_list, name)
+        return ingredients
 
-    def validate_tags(self, value):
-        if len(value) != len(set(value)):
-            raise serializers.ValidationError(
-                'Каждый тег можно выбрать только один раз'
-            )
-        return value
+    def validate_tags(self, tags):
+        name = 'тег'
+        is_not_selected_validator(tags, name)
+        only_one_selected_validator(tags, name)
+        return tags
 
 
 class IngredientRecipeReadSerializer(serializers.ModelSerializer):
