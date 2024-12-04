@@ -89,8 +89,8 @@ class UserViewSet(views.UserViewSet):
     )
     def subscriptions(self, request):
         """Список подписок."""
-        subscriptions = request.user.subscribers.all()
-        pages = self.paginate_queryset(subscriptions)
+        queryset = [obj.author for obj in request.user.subscribers.all()]
+        pages = self.paginate_queryset(queryset)
         serializer = SubscriptionSerializer(
             pages, many=True, context={'request': request}
         )
