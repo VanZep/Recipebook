@@ -3,12 +3,7 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
-from recipes.models import (
-    User, Recipe, Ingredient, Tag,
-    IngredientRecipe, Subscription
-)
-# from .utils import is_subscribed
-# from .mixins import IsSubscribeMixinSerializer
+from recipes.models import User, Recipe, Ingredient, Tag, IngredientRecipe
 
 
 class Base64ImageField(serializers.ImageField):
@@ -21,26 +16,6 @@ class Base64ImageField(serializers.ImageField):
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
 
         return super().to_internal_value(data)
-
-
-# class UserSerializer(serializers.ModelSerializer):
-#     """Сериализатор пользователей."""
-
-#     is_subscribed = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = User
-#         fields = (
-#             'email', 'id', 'username', 'first_name',
-#             'last_name', 'is_subscribed', 'avatar'
-#         )
-
-#     def get_is_subscribed(self, obj):
-#         user = self.context.get('request').user
-#         return bool(
-#             user and user.is_authenticated
-#             and is_subscribed(user, obj)
-#         )
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -85,9 +60,14 @@ class SubscriptionSerializer(UserSerializer):
         )
 
     def get_recipes(self, author):
+        request = self.context.get('request')
+        recipes = author.recipes.all()
+        limit = request.query_params.get('recipes_limit')
+        if limit:
+            recipes = recipes[:int(limit)]
         return (
             RecipeShortSerializer(
-                author.recipes.all(), many=True,
+                recipes, many=True,
                 context={'request': self.context.get('request')}
             ).data
         )

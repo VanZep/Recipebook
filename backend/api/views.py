@@ -26,6 +26,7 @@ from .serializers import (
 from .utils import (
     get_ingredients_in_shopping_cart, get_list_of_ingredients_string
 )
+from .pagination import PageNumberLimitPagination
 
 
 class UserViewSet(views.UserViewSet):
@@ -34,6 +35,8 @@ class UserViewSet(views.UserViewSet):
     добавление/удаление подписки;
     список подписок.
     """
+
+    pagination_class = PageNumberLimitPagination
 
     def get_subscription_objects(self, user, author):
         """Получение подписок."""
@@ -65,11 +68,9 @@ class UserViewSet(views.UserViewSet):
             'Вы уже подписаны на данного автора'
         )
         user_is_author_validator(user, author, 'Нельзя подписаться на себя')
-        subscription = Subscription.objects.create(
-            user=user, author=author
-        )
+        Subscription.objects.create(user=user, author=author)
         serializer = SubscriptionSerializer(
-            subscription, context={'request': request}
+            author, context={'request': request}
         )
         return Response(serializer.data, status=HTTP_201_CREATED)
 
@@ -102,6 +103,7 @@ class RecipeViewSet(ModelViewSet):
 
     queryset = Recipe.objects.all()
     permission_classes = (IsAuthenticatedOrIsAuthorOrReadOnly,)
+    pagination_class = PageNumberLimitPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('tags',)
 
@@ -222,7 +224,6 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('^name', 'name')
-    pagination_class = None
     permission_classes = (IsAdminUser,)
 
 
@@ -231,5 +232,4 @@ class TagViewSet(ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    pagination_class = None
     permission_classes = (IsAdminUser,)
