@@ -82,6 +82,10 @@ class Subscription(models.Model):
                 fields=('user', 'author'),
                 name='unique_user_author'
             ),
+            models.CheckConstraint(
+                check=~models.Q(author=models.F('user')),
+                name='check_subscribers_author',
+            )
         )
 
     def __str__(self):
@@ -118,6 +122,12 @@ class Ingredient(NameModel):
         verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
         ordering = ('name',)
+        constraints = (
+            models.UniqueConstraint(
+                fields=('name', 'measurement_unit'),
+                name='unique_name_measurement_unit'
+            ),
+        )
 
     def __str__(self):
         return self.name
