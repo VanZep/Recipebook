@@ -7,7 +7,7 @@ from core.models import NameModel
 from core.constants import (
     USER_CHARFIELD_MAX_LENGTH, EMAILFIELD_MAX_LENGTH,
     CHARFIELD_MAX_LENGTH, SLUGFIELD_MAX_LENGTH,
-    MIN_TIME, MAX_TIME, MIN_AMOUNT, MAX_AMOUNT
+    MIN_VALUE, MAX_VALUE
 )
 
 
@@ -163,12 +163,12 @@ class Recipe(NameModel):
     cooking_time = models.PositiveSmallIntegerField(
         validators=(
             MinValueValidator(
-                MIN_TIME,
-                f'Минимальное время приготовления {MIN_TIME} (мин).'
+                MIN_VALUE,
+                f'Минимальное время приготовления {MIN_VALUE} (мин).'
             ),
             MaxValueValidator(
-                MAX_TIME,
-                f'Максимальное время приготовления {MAX_TIME} (мин).'
+                MAX_VALUE,
+                f'Максимальное время приготовления {MAX_VALUE} (мин).'
             ),
         ),
         verbose_name='Время приготовления'
@@ -265,12 +265,12 @@ class IngredientRecipe(models.Model):
     amount = models.PositiveSmallIntegerField(
         validators=(
             MinValueValidator(
-                MIN_AMOUNT,
-                f'Минимальное количество {MIN_AMOUNT}.'
+                MIN_VALUE,
+                f'Минимальное количество {MIN_VALUE}.'
             ),
             MaxValueValidator(
-                MAX_AMOUNT,
-                f'Максимальное количество {MAX_AMOUNT}.'
+                MAX_VALUE,
+                f'Максимальное количество {MAX_VALUE}.'
             ),
         ),
         verbose_name='Количество'

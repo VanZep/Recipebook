@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from core.constants import PAGE_SIZE
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-*4bu50^(i8-%3*pkgg__kvg6getabbigwwsa6&79*3!$b_zfh8'

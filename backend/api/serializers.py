@@ -4,8 +4,10 @@ from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from recipes.models import User, Recipe, Ingredient, Tag, IngredientRecipe
-from core.constants import MIN_TIME, MAX_TIME
-from .validators import is_not_selected_validator, only_one_selected_validator
+from .validators import (
+    is_not_selected_validator, only_one_selected_validator,
+    min_max_value_validator
+)
 
 
 class Base64ImageField(serializers.ImageField):
@@ -112,6 +114,10 @@ class IngredientRecipeWriteSerializer(serializers.ModelSerializer):
         model = IngredientRecipe
         fields = ('id', 'amount')
 
+    def validate_amount(self, amount):
+        min_max_value_validator(amount, 'Количество')
+        return amount
+
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
     """Сериализатор создания/изменения рецептов."""
@@ -136,7 +142,11 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             IngredientRecipe.objects.filter(recipe=instance).delete()
         else:
             recipe = super().create(validated_data)
+        print()
+        print(ingredients)
         for ingredient in ingredients:
+            print()
+            print(ingredient)
             IngredientRecipe.objects.create(
                 recipe_id=recipe.id,
                 ingredient_id=ingredient.get('ingredient').get('id'),
@@ -167,11 +177,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return tags
 
     def validate_cooking_time(self, time):
-        if time < MIN_TIME or time > MAX_TIME:
-            raise serializers.ValidationError(
-                'Время приготовления должно быть в диапазоне '
-                f'от {MIN_TIME} до {MAX_TIME} в минутах.'
-            )
+        min_max_value_validator(time, 'Время приготовления')
         return time
 
 

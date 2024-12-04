@@ -1,5 +1,7 @@
 from rest_framework.serializers import ValidationError
 
+from core.constants import MIN_VALUE, MAX_VALUE
+
 
 def is_exists_objects_validator(obj, message):
     """Валидатор проверки, что объекты существуют."""
@@ -32,4 +34,13 @@ def only_one_selected_validator(obj_list, name):
     if len(obj_list) != len(set(obj_list)):
         raise ValidationError(
             f'Каждый {name} можно выбрать только один раз'
+        )
+
+
+def min_max_value_validator(value, part_of_message):
+    """Валидатор проверки, минимального и максимального значений."""
+    if value < MIN_VALUE or value > MAX_VALUE:
+        raise ValidationError(
+            f'{part_of_message} должно быть в диапазоне '
+            f'от {MIN_VALUE} до {MAX_VALUE}.'
         )
