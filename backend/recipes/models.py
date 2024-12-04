@@ -1,13 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.validators import ASCIIUsernameValidator
 
 from core.models import NameModel
 from core.constants import (
     USER_CHARFIELD_MAX_LENGTH, EMAILFIELD_MAX_LENGTH,
     CHARFIELD_MAX_LENGTH, SLUGFIELD_MAX_LENGTH,
-    MIN_TIME, MIN_AMOUNT
+    MIN_TIME, MAX_TIME, MIN_AMOUNT, MAX_AMOUNT
 )
 
 
@@ -166,6 +166,10 @@ class Recipe(NameModel):
                 MIN_TIME,
                 f'Минимальное время приготовления {MIN_TIME} (мин).'
             ),
+            MaxValueValidator(
+                MAX_TIME,
+                f'Максимальное время приготовления {MAX_TIME} (мин).'
+            ),
         ),
         verbose_name='Время приготовления'
     )
@@ -263,6 +267,10 @@ class IngredientRecipe(models.Model):
             MinValueValidator(
                 MIN_AMOUNT,
                 f'Минимальное количество {MIN_AMOUNT}.'
+            ),
+            MaxValueValidator(
+                MAX_AMOUNT,
+                f'Максимальное количество {MAX_AMOUNT}.'
             ),
         ),
         verbose_name='Количество'

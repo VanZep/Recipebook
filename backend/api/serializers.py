@@ -4,6 +4,7 @@ from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from recipes.models import User, Recipe, Ingredient, Tag, IngredientRecipe
+from core.constants import MIN_TIME, MAX_TIME
 from .validators import is_not_selected_validator, only_one_selected_validator
 
 
@@ -164,6 +165,14 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         is_not_selected_validator(tags, name)
         only_one_selected_validator(tags, name)
         return tags
+
+    def validate_cooking_time(self, time):
+        if time < MIN_TIME or time > MAX_TIME:
+            raise serializers.ValidationError(
+                'Время приготовления должно быть в диапазоне '
+                f'от {MIN_TIME} до {MAX_TIME} в минутах.'
+            )
+        return time
 
 
 class IngredientRecipeReadSerializer(serializers.ModelSerializer):
