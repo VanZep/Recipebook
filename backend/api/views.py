@@ -8,29 +8,26 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser import views
+from djoser.views import UserViewSet as DjoserUserViewSet
 
-from recipes.models import (
-    User, Recipe, Ingredient, Tag, Subscription, FavoriteRecipe, ShoppingCart
-)
-from .permissions import IsAuthenticatedOrIsAuthorOrReadOnly
-from .validators import (
-    is_exists_objects_validator, is_not_exists_objects_validator,
-    user_is_author_validator
-)
+from recipes.models import User, Recipe, Ingredient, Tag
 from .serializers import (
     UserAvatarSerializer, RecipeWriteSerializer, RecipeReadSerializer,
     IngredientSerializer, TagSerializer, SubscriptionSerializer,
-    UserSerializer, RecipeShortSerializer, CreteFavoriteRecipeSerializer
+    RecipeShortSerializer, CreateSubscriptionSerializer,
+    CreteFavoriteRecipeSerializer, CreateShoppingCartSerializer
 )
 from .utils import (
     get_ingredients_in_shopping_cart, get_list_of_ingredients_string,
-    get_favorite_recipe_objects
+    get_subscription_objects, get_favorite_recipe_objects,
+    get_shopping_cart_objects
 )
 from .pagination import PageNumberLimitPagination
+from .validators import is_not_exists_objects_validator
+from .permissions import IsAuthenticatedOrIsAuthorOrReadOnly
 
 
-class UserViewSet(views.UserViewSet):
+class UserViewSet(DjoserUserViewSet):
     """Расширение передставления пользователя:
     добавление/удаление аватара;
     добавление/удаление подписки;
@@ -38,10 +35,6 @@ class UserViewSet(views.UserViewSet):
     """
 
     pagination_class = PageNumberLimitPagination
-
-    # def get_subscription_objects(self, user, author):
-    #     """Получение подписок."""
-    #     return author.subscribing.filter(user=user)
 
     @action(methods=('put',), detail=False, url_path='me/avatar')
     def avatar(self, request):
@@ -59,35 +52,25 @@ class UserViewSet(views.UserViewSet):
         request.user.avatar.delete()
         return Response(status=HTTP_204_NO_CONTENT)
 
-    def get_subscription_objects(self, user, author):
-        """Получение подписок."""
-        return author.subscribing.filter(user=user)
-
     @action(methods=('post',), detail=True)
     def subscribe(self, request, id=None):
         """Добавление подписки."""
-        user = request.user
         author = get_object_or_404(User, id=id)
-        # is_exists_objects_validator(
-        #     self.get_subscription_objects(user, author),
-        #     'Вы уже подписаны на данного автора'
-        # )
-        # user_is_author_validator(user, author, 'Нельзя подписаться на себя')
-        # Subscription.objects.create(user=user, author=author)
-        serializer = SubscriptionSerializer(
-            data=UserSerializer(author).data, context={'request': request}
+        serializer = CreateSubscriptionSerializer(
+            data={"user": request.user.id, "author": author.id}
         )
-        print('OK')
         serializer.is_valid(raise_exception=True)
-        print('OK')
         serializer.save()
-        return Response(serializer.data, status=HTTP_201_CREATED)
+        return Response(
+            SubscriptionSerializer(author, context={'request': request}).data,
+            status=HTTP_201_CREATED
+        )
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id=None):
         """Удаление подписки."""
         author = get_object_or_404(User, id=id)
-        subscriptions = self.get_subscription_objects(request.user, author)
+        subscriptions = get_subscription_objects(request.user, author)
         is_not_exists_objects_validator(
             subscriptions, 'Вы не подписаны на данного автора'
         )
@@ -123,10 +106,6 @@ class RecipeViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
-    def get_shopping_cart_objects(self, user, recipe):
-        """Получение рецептов, находящихся в корзине покупок."""
-        return user.recipes_in_cart.filter(recipe=recipe)
 
     @action(
         methods=('get',), detail=True, url_path='get-link',
@@ -170,27 +149,22 @@ class RecipeViewSet(ModelViewSet):
     @action(methods=('post',), detail=True)
     def shopping_cart(self, request, pk=None):
         """Добавление в корзину."""
-        user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
-        is_exists_objects_validator(
-            self.get_shopping_cart_objects(user, recipe),
-            'Данный рецепт уже находится у вас в корзине'
+        serializer = CreateShoppingCartSerializer(
+            data={"user": request.user.id, "recipe": recipe.id}
         )
-        user_is_author_validator(
-            user, recipe.author,
-            'Нельзя добавить в корзину свой рецепт'
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            RecipeShortSerializer(recipe, context={'request': request}).data,
+            status=HTTP_201_CREATED
         )
-        ShoppingCart.objects.create(user=user, recipe=recipe)
-        serializer = RecipeShortSerializer(
-            recipe, context={'request': request}
-        )
-        return Response(serializer.data, status=HTTP_201_CREATED)
 
     @shopping_cart.mapping.delete
     def delete_from_shopping_cart(self, request, pk=None):
         """Удаление из корзины."""
         recipe = get_object_or_404(Recipe, pk=pk)
-        shopping_cart_recipes = self.get_shopping_cart_objects(
+        shopping_cart_recipes = get_shopping_cart_objects(
             request.user, recipe
         )
         is_not_exists_objects_validator(

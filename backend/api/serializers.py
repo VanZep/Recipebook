@@ -2,16 +2,17 @@ import base64
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (
-    User, Recipe, Ingredient, Tag, IngredientRecipe, FavoriteRecipe
+    User, Recipe, Ingredient, Tag, Subscription,
+    IngredientRecipe, FavoriteRecipe, ShoppingCart
 )
 from .validators import (
     is_not_selected_validator, only_one_selected_validator,
     min_max_value_validator, is_not_exists_objects_validator,
-    is_exists_objects_validator, user_is_author_validator
+    user_is_author_validator
 )
-from .utils import get_favorite_recipe_objects
 
 
 class Base64ImageField(serializers.ImageField):
@@ -38,12 +39,11 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, author):
-        # user = self.context.get('request').user
-        # return (
-        #     user and user.is_authenticated
-        #     and user.subscribers.filter(author=author).exists()
-        # )
-        return True
+        user = self.context.get('request').user
+        return (
+            user and user.is_authenticated
+            and user.subscribers.filter(author=author).exists()
+        )
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
@@ -67,12 +67,6 @@ class SubscriptionSerializer(UserSerializer):
             'is_subscribed', 'recipes', 'recipes_count', 'avatar'
         )
 
-    def create(self, validated_data):
-        print()
-        print(validated_data)
-        print()
-        # return super().create(validated_data)
-
     def get_recipes(self, author):
         request = self.context.get('request')
         recipes = author.recipes.all()
@@ -88,6 +82,28 @@ class SubscriptionSerializer(UserSerializer):
 
     def get_recipes_count(self, author):
         return author.recipes.count()
+
+
+class CreateSubscriptionSerializer(serializers.ModelSerializer):
+    """Сериализатор создания подписки."""
+
+    class Meta:
+        model = Subscription
+        fields = ('user', 'author')
+        validators = (
+            UniqueTogetherValidator(
+                queryset=Subscription.objects.all(),
+                fields=('user', 'author'),
+                message='Вы уже подписаны на данного автора'
+            ),
+        )
+
+    def validate_author(self, author):
+        user_is_author_validator(
+            self.initial_data.get('user'), author.id,
+            'Нельзя подписаться на себя'
+        )
+        return author
 
 
 class UserAvatarSerializer(serializers.ModelSerializer):
@@ -256,16 +272,39 @@ class CreteFavoriteRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoriteRecipe
         fields = ('recipe', 'user')
-
-    def validate(self, attrs):
-        recipe = attrs.get('recipe')
-        user = attrs.get('user')
-        is_exists_objects_validator(
-            get_favorite_recipe_objects(user, recipe),
-            'Данный рецепт уже находится у вас в избранном'
+        validators = (
+            UniqueTogetherValidator(
+                queryset=FavoriteRecipe.objects.all(),
+                fields=('recipe', 'user'),
+                message='Данный рецепт уже находится у вас в избранном'
+            ),
         )
+
+    def validate_recipe(self, recipe):
         user_is_author_validator(
-            user, recipe.author,
+            self.initial_data.get('user'), recipe.author.id,
             'Нельзя добавить в избранное свой рецепт'
         )
-        return attrs
+        return recipe
+
+
+class CreateShoppingCartSerializer(serializers.ModelSerializer):
+    """Сериализатор добавления рецепта в корзину покупок."""
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('recipe', 'user')
+        validators = (
+            UniqueTogetherValidator(
+                queryset=ShoppingCart.objects.all(),
+                fields=('recipe', 'user'),
+                message='Данный рецепт уже находится у вас в корзине'
+            ),
+        )
+
+    def validate_recipe(self, recipe):
+        user_is_author_validator(
+            self.initial_data.get('user'), recipe.author.id,
+            'Нельзя добавить в корзину свой рецепт'
+        )
+        return recipe

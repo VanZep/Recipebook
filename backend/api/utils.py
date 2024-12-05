@@ -35,6 +35,16 @@ def get_list_of_ingredients_string(ingredients):
     )
 
 
+def get_subscription_objects(user, author):
+    """Получение подписок."""
+    return author.subscribing.filter(user=user)
+
+
 def get_favorite_recipe_objects(user, recipe):
     """Получение избранных рецептов."""
     return user.favorite_recipes.filter(recipe=recipe)
+
+
+def get_shopping_cart_objects(user, recipe):
+    """Получение рецептов, находящихся в корзине покупок."""
+    return user.recipes_in_cart.filter(recipe=recipe)

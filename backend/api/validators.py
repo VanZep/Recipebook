@@ -3,12 +3,6 @@ from rest_framework.serializers import ValidationError
 from core.constants import MIN_VALUE, MAX_VALUE
 
 
-def is_exists_objects_validator(obj, message):
-    """Валидатор проверки, что объекты существуют."""
-    if obj.exists():
-        raise ValidationError({'detail': message})
-
-
 def is_not_exists_objects_validator(obj, message):
     """Валидатор проверки, что объекты не существуют."""
     if not obj.exists():
