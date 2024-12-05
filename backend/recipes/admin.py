@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from core.constants import INLINE_EXTRA_FIELDS
+from core.constants import INLINE_EXTRA_FIELDS, MIN_NUM
 from .models import (
     User, Recipe, Ingredient, Tag, Subscription,
     IngredientRecipe, FavoriteRecipe, ShoppingCart
@@ -12,6 +12,7 @@ admin.site.empty_value_display = '-пусто-'
 class RecipeIngredientsInLine(admin.TabularInline):
     model = IngredientRecipe
     extra = INLINE_EXTRA_FIELDS
+    min_num = MIN_NUM
 
 
 @admin.register(User)
@@ -47,9 +48,28 @@ class IngredientAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'measurement_unit')
     search_fields = ('^name', 'name')
+    list_per_page = 20
 
 
-admin.site.register(Tag)
-admin.site.register(Subscription)
-admin.site.register(FavoriteRecipe)
-admin.site.register(ShoppingCart)
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+
+    list_display = ('name', 'slug')
+
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+
+    list_display = ('user', 'author')
+
+
+@admin.register(FavoriteRecipe)
+class FavoriteRecipeAdmin(admin.ModelAdmin):
+
+    list_display = ('user', 'recipe')
+
+
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(admin.ModelAdmin):
+
+    list_display = ('user', 'recipe')
