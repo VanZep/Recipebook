@@ -2,7 +2,6 @@ import base64
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
-from django.db import transaction
 
 from recipes.models import User, Recipe, Ingredient, Tag, IngredientRecipe
 from .validators import (
