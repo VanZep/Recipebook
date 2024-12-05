@@ -33,3 +33,8 @@ def get_list_of_ingredients_string(ingredients):
         f'({ingredient.get("ingredient__measurement_unit")})'
         for i, ingredient in enumerate(ingredients)
     )
+
+
+def get_favorite_recipe_objects(user, recipe):
+    """Получение избранных рецептов."""
+    return user.favorite_recipes.filter(recipe=recipe)

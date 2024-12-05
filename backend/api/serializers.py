@@ -3,11 +3,15 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
-from recipes.models import User, Recipe, Ingredient, Tag, IngredientRecipe
+from recipes.models import (
+    User, Recipe, Ingredient, Tag, IngredientRecipe, FavoriteRecipe
+)
 from .validators import (
     is_not_selected_validator, only_one_selected_validator,
-    min_max_value_validator, is_not_exists_objects_validator
+    min_max_value_validator, is_not_exists_objects_validator,
+    is_exists_objects_validator, user_is_author_validator
 )
+from .utils import get_favorite_recipe_objects
 
 
 class Base64ImageField(serializers.ImageField):
@@ -34,11 +38,12 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, author):
-        user = self.context.get('request').user
-        return (
-            user and user.is_authenticated
-            and user.subscribers.filter(author=author).exists()
-        )
+        # user = self.context.get('request').user
+        # return (
+        #     user and user.is_authenticated
+        #     and user.subscribers.filter(author=author).exists()
+        # )
+        return True
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
@@ -61,6 +66,12 @@ class SubscriptionSerializer(UserSerializer):
             'email', 'id', 'username', 'first_name', 'last_name',
             'is_subscribed', 'recipes', 'recipes_count', 'avatar'
         )
+
+    def create(self, validated_data):
+        print()
+        print(validated_data)
+        print()
+        # return super().create(validated_data)
 
     def get_recipes(self, author):
         request = self.context.get('request')
@@ -239,14 +250,22 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         )
 
 
-class AddRecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор добавления рецептов в избранное/корзину."""
-
-    id = serializers.ReadOnlyField(source='recipe.id')
-    name = serializers.ReadOnlyField(source='recipe.name')
-    image = Base64ImageField(source='recipe.image')
-    cooking_time = serializers.ReadOnlyField(source='recipe.cooking_time')
+class CreteFavoriteRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор создания избранного рецепта."""
 
     class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
+        model = FavoriteRecipe
+        fields = ('recipe', 'user')
+
+    def validate(self, attrs):
+        recipe = attrs.get('recipe')
+        user = attrs.get('user')
+        is_exists_objects_validator(
+            get_favorite_recipe_objects(user, recipe),
+            'Данный рецепт уже находится у вас в избранном'
+        )
+        user_is_author_validator(
+            user, recipe.author,
+            'Нельзя добавить в избранное свой рецепт'
+        )
+        return attrs

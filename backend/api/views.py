@@ -21,10 +21,11 @@ from .validators import (
 from .serializers import (
     UserAvatarSerializer, RecipeWriteSerializer, RecipeReadSerializer,
     IngredientSerializer, TagSerializer, SubscriptionSerializer,
-    AddRecipeSerializer
+    UserSerializer, RecipeShortSerializer, CreteFavoriteRecipeSerializer
 )
 from .utils import (
-    get_ingredients_in_shopping_cart, get_list_of_ingredients_string
+    get_ingredients_in_shopping_cart, get_list_of_ingredients_string,
+    get_favorite_recipe_objects
 )
 from .pagination import PageNumberLimitPagination
 
@@ -38,9 +39,9 @@ class UserViewSet(views.UserViewSet):
 
     pagination_class = PageNumberLimitPagination
 
-    def get_subscription_objects(self, user, author):
-        """Получение подписок."""
-        return author.subscribing.filter(user=user)
+    # def get_subscription_objects(self, user, author):
+    #     """Получение подписок."""
+    #     return author.subscribing.filter(user=user)
 
     @action(methods=('put',), detail=False, url_path='me/avatar')
     def avatar(self, request):
@@ -58,20 +59,28 @@ class UserViewSet(views.UserViewSet):
         request.user.avatar.delete()
         return Response(status=HTTP_204_NO_CONTENT)
 
+    def get_subscription_objects(self, user, author):
+        """Получение подписок."""
+        return author.subscribing.filter(user=user)
+
     @action(methods=('post',), detail=True)
     def subscribe(self, request, id=None):
         """Добавление подписки."""
         user = request.user
         author = get_object_or_404(User, id=id)
-        is_exists_objects_validator(
-            self.get_subscription_objects(user, author),
-            'Вы уже подписаны на данного автора'
-        )
-        user_is_author_validator(user, author, 'Нельзя подписаться на себя')
-        Subscription.objects.create(user=user, author=author)
+        # is_exists_objects_validator(
+        #     self.get_subscription_objects(user, author),
+        #     'Вы уже подписаны на данного автора'
+        # )
+        # user_is_author_validator(user, author, 'Нельзя подписаться на себя')
+        # Subscription.objects.create(user=user, author=author)
         serializer = SubscriptionSerializer(
-            author, context={'request': request}
+            data=UserSerializer(author).data, context={'request': request}
         )
+        print('OK')
+        serializer.is_valid(raise_exception=True)
+        print('OK')
+        serializer.save()
         return Response(serializer.data, status=HTTP_201_CREATED)
 
     @subscribe.mapping.delete
@@ -115,10 +124,6 @@ class RecipeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def get_favorite_recipe_objects(self, user, recipe):
-        """Получение избранных рецептов."""
-        return user.favorite_recipes.filter(recipe=recipe)
-
     def get_shopping_cart_objects(self, user, recipe):
         """Получение рецептов, находящихся в корзине покупок."""
         return user.recipes_in_cart.filter(recipe=recipe)
@@ -138,29 +143,22 @@ class RecipeViewSet(ModelViewSet):
     @action(methods=('post',), detail=True)
     def favorite(self, request, pk=None):
         """Добавление в избранное."""
-        user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
-        is_exists_objects_validator(
-            self.get_favorite_recipe_objects(user, recipe),
-            'Данный рецепт уже находится у вас в избранном'
+        serializer = CreteFavoriteRecipeSerializer(
+            data={"user": request.user.id, "recipe": recipe.id}
         )
-        user_is_author_validator(
-            user, recipe.author,
-            'Нельзя добавить в избранное свой рецепт'
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            RecipeShortSerializer(recipe, context={'request': request}).data,
+            status=HTTP_201_CREATED
         )
-        favorite_recipe = FavoriteRecipe.objects.create(
-            user=user, recipe=recipe
-        )
-        serializer = AddRecipeSerializer(
-            favorite_recipe, context={'request': request}
-        )
-        return Response(serializer.data, status=HTTP_201_CREATED)
 
     @favorite.mapping.delete
     def delete_from_favorite(self, request, pk=None):
         """Удаление из избранного."""
         recipe = get_object_or_404(Recipe, pk=pk)
-        favorite_recipes = self.get_favorite_recipe_objects(
+        favorite_recipes = get_favorite_recipe_objects(
             request.user, recipe
         )
         is_not_exists_objects_validator(
@@ -182,11 +180,9 @@ class RecipeViewSet(ModelViewSet):
             user, recipe.author,
             'Нельзя добавить в корзину свой рецепт'
         )
-        shopping_cart_recipe = ShoppingCart.objects.create(
-            user=user, recipe=recipe
-        )
-        serializer = AddRecipeSerializer(
-            shopping_cart_recipe, context={'request': request}
+        ShoppingCart.objects.create(user=user, recipe=recipe)
+        serializer = RecipeShortSerializer(
+            recipe, context={'request': request}
         )
         return Response(serializer.data, status=HTTP_201_CREATED)
 
