@@ -2,11 +2,12 @@ import base64
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
+from django.db import transaction
 
 from recipes.models import User, Recipe, Ingredient, Tag, IngredientRecipe
 from .validators import (
     is_not_selected_validator, only_one_selected_validator,
-    min_max_value_validator
+    min_max_value_validator, is_not_exists_objects_validator
 )
 
 
@@ -114,6 +115,13 @@ class IngredientRecipeWriteSerializer(serializers.ModelSerializer):
         model = IngredientRecipe
         fields = ('id', 'amount')
 
+    def validate_id(self, id):
+        is_not_exists_objects_validator(
+            Ingredient.objects.filter(id=id),
+            'Такой ингредиент не существует'
+        )
+        return id
+
     def validate_amount(self, amount):
         min_max_value_validator(amount, 'Количество')
         return amount
@@ -139,19 +147,19 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         if instance:
             recipe = super().update(instance, validated_data)
-            IngredientRecipe.objects.filter(recipe=instance).delete()
+            instance.ingredients.clear()
         else:
             recipe = super().create(validated_data)
-        print()
-        print(ingredients)
+        ingredient_list = []
         for ingredient in ingredients:
-            print()
-            print(ingredient)
-            IngredientRecipe.objects.create(
-                recipe_id=recipe.id,
-                ingredient_id=ingredient.get('ingredient').get('id'),
-                amount=ingredient.get('amount')
+            ingredient_list.append(
+                IngredientRecipe(
+                    recipe=recipe,
+                    ingredient_id=ingredient.get('ingredient').get('id'),
+                    amount=ingredient.get('amount')
+                )
             )
+        IngredientRecipe.objects.bulk_create(ingredient_list)
         recipe.tags.set(tags)
         return recipe
 
