@@ -1,4 +1,5 @@
 import base64
+from string import digits
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
@@ -72,7 +73,15 @@ class SubscriptionSerializer(UserSerializer):
         recipes = author.recipes.all()
         limit = request.query_params.get('recipes_limit')
         if limit:
-            recipes = recipes[:int(limit)]
+            if limit.isdigit():
+                recipes = recipes[:int(limit)]
+            else:
+                raise serializers.ValidationError(
+                    {
+                        'detail':
+                        'Значение recipes_limit должно быть целочисленным'
+                    }
+                )
         return (
             RecipeShortSerializer(
                 recipes, many=True,

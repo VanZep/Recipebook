@@ -57,7 +57,7 @@ class UserViewSet(DjoserUserViewSet):
         """Добавление подписки."""
         author = get_object_or_404(User, id=id)
         serializer = CreateSubscriptionSerializer(
-            data={"user": request.user.id, "author": author.id}
+            data={'user': request.user.id, 'author': author.id}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -124,7 +124,7 @@ class RecipeViewSet(ModelViewSet):
         """Добавление в избранное."""
         recipe = get_object_or_404(Recipe, pk=pk)
         serializer = CreteFavoriteRecipeSerializer(
-            data={"user": request.user.id, "recipe": recipe.id}
+            data={'user': request.user.id, 'recipe': recipe.id}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -151,7 +151,7 @@ class RecipeViewSet(ModelViewSet):
         """Добавление в корзину."""
         recipe = get_object_or_404(Recipe, pk=pk)
         serializer = CreateShoppingCartSerializer(
-            data={"user": request.user.id, "recipe": recipe.id}
+            data={'user': request.user.id, 'recipe': recipe.id}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
