@@ -1,5 +1,4 @@
 import base64
-from string import digits
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
@@ -13,6 +12,10 @@ from .validators import (
     is_not_selected_validator, only_one_selected_validator,
     min_max_value_validator, is_not_exists_objects_validator,
     user_is_author_validator
+)
+from .utils import (
+    get_subscription_objects, get_favorite_recipe_objects,
+    get_shopping_cart_objects
 )
 
 
@@ -43,7 +46,7 @@ class UserSerializer(serializers.ModelSerializer):
         user = self.context.get('request').user
         return (
             user and user.is_authenticated
-            and user.subscribers.filter(author=author).exists()
+            and get_subscription_objects(user, author).exists()
         )
 
 
@@ -144,18 +147,18 @@ class IngredientSerializer(serializers.ModelSerializer):
 class IngredientRecipeWriteSerializer(serializers.ModelSerializer):
     """Сериализатор создания/изменения связи ингредиентов с рецептом."""
 
-    id = serializers.IntegerField(source='ingredient.id')
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
 
     class Meta:
         model = IngredientRecipe
         fields = ('id', 'amount')
 
-    def validate_id(self, id):
+    def validate_id(self, ingredient):
         is_not_exists_objects_validator(
-            Ingredient.objects.filter(id=id),
+            Ingredient.objects.filter(id=ingredient.id),
             'Такой ингредиент не существует'
         )
-        return id
+        return ingredient
 
     def validate_amount(self, amount):
         min_max_value_validator(amount, 'Количество')
@@ -165,9 +168,7 @@ class IngredientRecipeWriteSerializer(serializers.ModelSerializer):
 class RecipeWriteSerializer(serializers.ModelSerializer):
     """Сериализатор создания/изменения рецептов."""
 
-    ingredients = IngredientRecipeWriteSerializer(
-        many=True, source='recipe_ingredients'
-    )
+    ingredients = IngredientRecipeWriteSerializer(many=True)
     image = Base64ImageField()
 
     class Meta:
@@ -178,7 +179,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         )
 
     def create_update_recipe(self, validated_data, instance=None):
-        ingredients = validated_data.pop('recipe_ingredients')
+        ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         if instance:
             recipe = super().update(instance, validated_data)
@@ -190,7 +191,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             ingredient_list.append(
                 IngredientRecipe(
                     recipe=recipe,
-                    ingredient_id=ingredient.get('ingredient').get('id'),
+                    ingredient=ingredient.get('id'),
                     amount=ingredient.get('amount')
                 )
             )
@@ -204,12 +205,15 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         return self.create_update_recipe(validated_data, instance)
 
+    def to_representation(self, instance):
+        return RecipeReadSerializer(
+            instance, context={'request': self.context.get('request')}
+        ).data
+
     def validate_ingredients(self, ingredients):
         name = 'ингредиент'
         is_not_selected_validator(ingredients, name)
-        ingredients_id_list = [
-            item.get('ingredient').get('id') for item in ingredients
-        ]
+        ingredients_id_list = [item.get('id') for item in ingredients]
         only_one_selected_validator(ingredients_id_list, name)
         return ingredients
 
@@ -264,14 +268,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         user = self.get_user()
         return (
             user and user.is_authenticated
-            and user.favorite_recipes.filter(recipe=recipe).exists()
+            and get_favorite_recipe_objects(user, recipe).exists()
         )
 
     def get_is_in_shopping_cart(self, recipe):
         user = self.get_user()
         return (
             user and user.is_authenticated
-            and user.recipes_in_cart.filter(recipe=recipe).exists()
+            and get_shopping_cart_objects(user, recipe).exists()
         )
 
 
