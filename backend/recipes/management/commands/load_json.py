@@ -4,13 +4,15 @@ python manage.py load_json.
 """
 import json
 
+from foodgram_backend.settings import BASE_DIR
 from django.core.management import BaseCommand
 from django.db.utils import IntegrityError
 
-from recipes.models import User, Ingredient, Tag
+from recipes.models import User, Ingredient, Tag, Recipe, IngredientRecipe
 
 MODELS_JSONFILES = {
-    User: 'users.json', Ingredient: 'ingredients.json', Tag: 'tags.json'
+    User: 'users.json', Ingredient: 'ingredients.json', Tag: 'tags.json',
+    Recipe: 'recipes.json', IngredientRecipe: 'ingredientrecipe.json'
 }
 
 
@@ -24,7 +26,7 @@ class Command(BaseCommand):
             model_name = model.__name__
             try:
                 with open(
-                    f'../data/{json_file}',
+                    f'{BASE_DIR}/data/{json_file}',
                     'r', encoding='utf-8'
                 ) as file:
                     data = json.loads(file.read())

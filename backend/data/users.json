@@ -1,0 +1,8 @@
+[
+    {"username": "user1", "email": "user1@mail.not", "first_name": "user1", "last_name": "user1", "password": "user1_12345"},
+    {"username": "user2", "email": "user2@mail.not", "first_name": "user2", "last_name": "user2", "password": "user2_12345"},
+    {"username": "user3", "email": "user3@mail.not", "first_name": "user3", "last_name": "user3", "password": "user3_12345"},
+    {"username": "Admin", "email": "Admin@mail.not", "first_name": "Admin", "last_name": "Admin", "password": "Admin", "is_superuser": "True", "is_staff": "True"},
+    {"username": "Alex", "email": "alex@mail.not", "first_name": "Alexander", "last_name": "Alexeev", "password": "Alex_12345"},
+    {"username": "Johnny", "email": "johnny@mail.not", "first_name": "John", "last_name": "Bonjovi", "password": "Johnny_12345"}
+]

@@ -194,7 +194,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('^name', 'name')
-    permission_classes = (IsAdminUser,)
+    # permission_classes = (IsAdminUser,)
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -202,4 +202,4 @@ class TagViewSet(ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (IsAdminUser,)
+    # permission_classes = (IsAdminUser,)

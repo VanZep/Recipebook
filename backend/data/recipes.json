@@ -1,0 +1,4 @@
+[
+    {"name": "Глазунья", "text": "Разбить пару яиц на разогретую сковородку. Соль, перец, 5 минут и готово!", "image": "recipes/images/fried_egg.jpg", "cooking_time": 5, "author_id": 1},
+    {"name": "Банан", "text": "Посто еш!", "image": "recipes/images/banana.jpg", "cooking_time": 1, "author_id": 1}
+]

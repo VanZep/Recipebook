@@ -32,7 +32,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'author', 'favorite_count')
     search_fields = ('name', 'author__username')
-    readonly_fields = ('pub_date', 'author')
+    readonly_fields = ('pub_date',)
     list_filter = ('tags',)
     filter_horizontal = ('tags',)
     inlines = (RecipeIngredientsInLine,)
@@ -46,7 +46,7 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
 
-    list_display = ('name', 'measurement_unit')
+    list_display = ('id', 'name', 'measurement_unit')
     search_fields = ('^name', 'name')
     list_per_page = 20
 
@@ -54,7 +54,7 @@ class IngredientAdmin(admin.ModelAdmin):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
 
-    list_display = ('name', 'slug')
+    list_display = ('id', 'name', 'slug')
 
 
 @admin.register(Subscription)
