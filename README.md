@@ -108,7 +108,7 @@ docker compose up
 docker compose exec backend python manage.py migrate
 docker compose exec backend python manage.py collectstatic
 docker compose exec backend cp -r /app/collected_static/. /static/static/
-docker compose exec backend cp -r /app/media/. /media/
+docker compose exec backend cp -r /app/test_media/. /media/
 ```
 - *Можете наполнить базу проекта тестовыми данными:*
 ```
@@ -184,7 +184,7 @@ sudo docker compose -f docker-compose.production.yml up -d
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
 sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /static/static/
-sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/media/. /media/
+sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/test_media/. /media/
 ```
 - *Можете наполнить базу проекта тестовыми данными:*
 ```

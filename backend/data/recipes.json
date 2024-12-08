@@ -1,10 +1,10 @@
 [
-    {"name": "Глазунья", "text": "Разбить пару яиц на разогретую сковородку. Соль, перец, 5 минут и готово!", "image": "recipes/images/fried_egg.jpg", "cooking_time": 5, "author_id": 1},
-    {"name": "Банан", "text": "Посто еш!", "image": "recipes/images/banana.jpg", "cooking_time": 1, "author_id": 1},
-    {"name": "Кофе", "text": "Посто пей!", "image": "recipes/images/cofe.jpg", "cooking_time": 2, "author_id": 1},
-    {"name": "Блины с медом", "text": "Вкуснятина!", "image": "recipes/images/blin.jpg", "cooking_time": 20, "author_id": 1},
-    {"name": "Конфеты", "text": "Покупай и лопай!", "image": "recipes/images/konfety.jpg", "cooking_time": 1, "author_id": 1},
-    {"name": "Стейк рибай", "text": "Пожарь как-нибудь)", "image": "recipes/images/steak.jpg", "cooking_time": 7, "author_id": 1},
-    {"name": "Салат овощной", "text": "Порежь овощи, смешай.", "image": "recipes/images/salat.jpg", "cooking_time": 10, "author_id": 1},
-    {"name": "Стейк из лосося", "text": "Главное не передержи", "image": "recipes/images/losos.jpg", "cooking_time": 10, "author_id": 2}
+    {"name": "Глазунья", "text": "Разбить пару яиц на разогретую сковородку. Соль, перец, 5 минут и готово!", "image": "/recipes/images/fried_egg.jpg", "cooking_time": 5, "author_id": 1},
+    {"name": "Банан", "text": "Посто еш!", "image": "/recipes/images/banana.jpg", "cooking_time": 1, "author_id": 1},
+    {"name": "Кофе", "text": "Посто пей!", "image": "/recipes/images/cofe.jpg", "cooking_time": 2, "author_id": 1},
+    {"name": "Блины с медом", "text": "Вкуснятина!", "image": "/recipes/images/blin.jpg", "cooking_time": 20, "author_id": 1},
+    {"name": "Конфеты", "text": "Покупай и лопай!", "image": "/recipes/images/konfety.jpg", "cooking_time": 1, "author_id": 1},
+    {"name": "Стейк рибай", "text": "Пожарь как-нибудь)", "image": "/recipes/images/steak.jpg", "cooking_time": 7, "author_id": 1},
+    {"name": "Салат овощной", "text": "Порежь овощи, смешай.", "image": "/recipes/images/salat.jpg", "cooking_time": 10, "author_id": 1},
+    {"name": "Стейк из лосося", "text": "Главное не передержи", "image": "/recipes/images/losos.jpg", "cooking_time": 10, "author_id": 2}
 ]
