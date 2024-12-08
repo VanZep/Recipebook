@@ -13,21 +13,21 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   backend:
-    build: ./backend/
+    image: vanzep/foodgram_backend
     env_file: .env
     volumes:
       - static:/static
       - media:/media
 
   frontend:
-    build: ./frontend/
+    image: vanzep/foodgram_frontend
     env_file: .env
     command: cp -r /app/build/. /static/
     volumes:
       - static:/static
 
   nginx:
-    build: ./nginx/
+    image: vanzep/foodgram_nginx
     env_file: .env
     ports:
       - 7000:80

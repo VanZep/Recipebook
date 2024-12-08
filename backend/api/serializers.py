@@ -305,13 +305,6 @@ class CreteFavoriteRecipeSerializer(serializers.ModelSerializer):
             ),
         )
 
-    # def validate_recipe(self, recipe):
-    #     user_is_author_validator(
-    #         self.initial_data.get('user'), recipe.author.id,
-    #         'Нельзя добавить в избранное свой рецепт'
-    #     )
-    #     return recipe
-
 
 class CreateShoppingCartSerializer(serializers.ModelSerializer):
     """Сериализатор добавления рецепта в корзину покупок."""
@@ -326,10 +319,3 @@ class CreateShoppingCartSerializer(serializers.ModelSerializer):
                 message='Данный рецепт уже находится у вас в корзине'
             ),
         )
-
-    # def validate_recipe(self, recipe):
-    #     user_is_author_validator(
-    #         self.initial_data.get('user'), recipe.author.id,
-    #         'Нельзя добавить в корзину свой рецепт'
-    #     )
-    #     return recipe
