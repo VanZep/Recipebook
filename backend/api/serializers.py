@@ -4,7 +4,8 @@ from django.core.files.base import ContentFile
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from djoser.serializers import (
-    UserCreateSerializer as DjoserUserCreateSerializer
+    UserCreateSerializer as DjoserUserCreateSerializer,
+    UserSerializer as DjoserUserSerializer
 )
 
 from recipes.models import (
@@ -41,7 +42,7 @@ class UserCreateSerializer(DjoserUserCreateSerializer):
         fields = ('email', 'username', 'first_name', 'last_name', 'password')
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(DjoserUserSerializer):
     """Сериализатор пользователей."""
 
     is_subscribed = serializers.SerializerMethodField()
@@ -304,12 +305,12 @@ class CreteFavoriteRecipeSerializer(serializers.ModelSerializer):
             ),
         )
 
-    def validate_recipe(self, recipe):
-        user_is_author_validator(
-            self.initial_data.get('user'), recipe.author.id,
-            'Нельзя добавить в избранное свой рецепт'
-        )
-        return recipe
+    # def validate_recipe(self, recipe):
+    #     user_is_author_validator(
+    #         self.initial_data.get('user'), recipe.author.id,
+    #         'Нельзя добавить в избранное свой рецепт'
+    #     )
+    #     return recipe
 
 
 class CreateShoppingCartSerializer(serializers.ModelSerializer):
@@ -326,9 +327,9 @@ class CreateShoppingCartSerializer(serializers.ModelSerializer):
             ),
         )
 
-    def validate_recipe(self, recipe):
-        user_is_author_validator(
-            self.initial_data.get('user'), recipe.author.id,
-            'Нельзя добавить в корзину свой рецепт'
-        )
-        return recipe
+    # def validate_recipe(self, recipe):
+    #     user_is_author_validator(
+    #         self.initial_data.get('user'), recipe.author.id,
+    #         'Нельзя добавить в корзину свой рецепт'
+    #     )
+    #     return recipe

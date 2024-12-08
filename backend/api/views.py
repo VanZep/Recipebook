@@ -3,7 +3,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework.reverse import reverse
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
@@ -25,6 +24,7 @@ from .utils import (
 from .pagination import PageNumberLimitPagination
 from .validators import is_not_exists_objects_validator
 from .permissions import IsAuthenticatedOrIsAuthorOrReadOnly
+from .filters import RecipeFilter, IngredientFilter
 
 
 class UserViewSet(DjoserUserViewSet):
@@ -94,12 +94,13 @@ class RecipeViewSet(ModelViewSet):
     """Представление рецептов."""
 
     queryset = Recipe.objects.all()
-    permission_classes = (AllowAny,)
+    # permission_classes = (AllowAny,)
     # permission_classes = (IsAuthenticatedOrReadOnly,)
-    # permission_classes = (IsAuthenticatedOrIsAuthorOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrIsAuthorOrReadOnly,)
     pagination_class = PageNumberLimitPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('tags__name',)
+    filterset_class = RecipeFilter
+    # filterset_fields = (RecipeFilter,)
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -111,7 +112,7 @@ class RecipeViewSet(ModelViewSet):
 
     @action(
         methods=('get',), detail=True, url_path='get-link',
-        permission_classes=(IsAuthenticated,),
+        # permission_classes=(IsAuthenticated,),
     )
     def get_link(self, request, pk=None):
         """Получение короткой ссылки."""
@@ -177,7 +178,7 @@ class RecipeViewSet(ModelViewSet):
         return Response(status=HTTP_204_NO_CONTENT)
 
     @action(
-        methods=('get',), detail=False, permission_classes=(IsAuthenticated,)
+        methods=('get',), detail=False,  # permission_classes=(IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
         """Загрузка списка ингредиентов из корзины."""
@@ -194,9 +195,11 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filter_backends = (SearchFilter,)
-    search_fields = ('^name', 'name')
+    # filter_backends = (DjangoFilterBackend,)
+    # filterset_class = IngredientFilter
     # permission_classes = (IsAdminUser,)
+    filter_backends = (IngredientFilter,)
+    search_fields = ('^name', 'name')
 
 
 class TagViewSet(ReadOnlyModelViewSet):
