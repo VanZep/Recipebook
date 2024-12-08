@@ -3,5 +3,6 @@
     {"name": "Обед", "slug": "lunch"},
     {"name": "Ужин", "slug": "dinner"},
     {"name": "Десерт", "slug": "dessert"},
-    {"name": "Перекус", "slug": "snacking"}
+    {"name": "Перекус", "slug": "snacking"},
+    {"name": "Кофе-брейк", "slug": "cofe-break"}
 ]

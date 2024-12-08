@@ -1,4 +1,27 @@
 [
     {"amount": 140, "ingredient_id": 2181, "recipe_id": 1},
-    {"amount":100, "ingredient_id": 97, "recipe_id": 2}
+    {"amount": 1, "ingredient_id": 1684, "recipe_id": 1},
+    {"amount": 1, "ingredient_id": 1235, "recipe_id": 1},
+    {"amount":100, "ingredient_id": 97, "recipe_id": 2},
+    {"amount":100, "ingredient_id": 705, "recipe_id": 3},
+    {"amount":5, "ingredient_id": 1546, "recipe_id": 3},
+    {"amount":120, "ingredient_id": 133, "recipe_id": 4},
+    {"amount":120, "ingredient_id": 991, "recipe_id": 4},
+    {"amount":80, "ingredient_id": 2104, "recipe_id": 5},
+    {"amount":200, "ingredient_id": 287, "recipe_id": 6},
+    {"amount":50, "ingredient_id": 1353, "recipe_id": 6},
+    {"amount":5, "ingredient_id": 435, "recipe_id": 6},
+    {"amount":1, "ingredient_id": 1684, "recipe_id": 6},
+    {"amount":1, "ingredient_id": 1235, "recipe_id": 6},
+    {"amount":50, "ingredient_id": 1341, "recipe_id": 7},
+    {"amount":50, "ingredient_id": 1142, "recipe_id": 7},
+    {"amount":20, "ingredient_id": 878, "recipe_id": 7},
+    {"amount":20, "ingredient_id": 1163, "recipe_id": 7},
+    {"amount":5, "ingredient_id": 1890, "recipe_id": 7},
+    {"amount":5, "ingredient_id": 1305, "recipe_id": 7},
+    {"amount":200, "ingredient_id": 873, "recipe_id": 8},
+    {"amount":20, "ingredient_id": 1353, "recipe_id": 8},
+    {"amount":20, "ingredient_id": 855, "recipe_id": 8},
+    {"amount":2, "ingredient_id": 1848, "recipe_id": 8},
+    {"amount":1, "ingredient_id": 1687, "recipe_id": 8}
 ]

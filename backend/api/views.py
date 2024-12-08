@@ -4,7 +4,7 @@ from rest_framework.reverse import reverse
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from django_filters.rest_framework import DjangoFilterBackend
@@ -94,10 +94,12 @@ class RecipeViewSet(ModelViewSet):
     """Представление рецептов."""
 
     queryset = Recipe.objects.all()
-    permission_classes = (IsAuthenticatedOrIsAuthorOrReadOnly,)
+    permission_classes = (AllowAny,)
+    # permission_classes = (IsAuthenticatedOrReadOnly,)
+    # permission_classes = (IsAuthenticatedOrIsAuthorOrReadOnly,)
     pagination_class = PageNumberLimitPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('tags',)
+    filterset_fields = ('tags__name',)
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
