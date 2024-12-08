@@ -31,8 +31,8 @@ Python 3.9, Django 3.2, djangorestframework 3.12, gunicorn 20.1, Nginx 1.18, Pos
 В проекте Foodgram есть две версии:
 - Обычная версия используется, чтобы развернуть проект на своём компьютере. В ней образы контейнеров создаются в процессе разворота проекта.
 - Продакшн-версия используется, чтобы развернуть проект на удаленном сервере. В ней используются готовые образы контейнеров с dockerhub.
-<!--- Проект доступен по адресу - [http://kyttygram.sytes.net/](http://kyttygram.sytes.net/)-->
-<!--- Статус последнего workflow: ![workflow status](https://github.com/VanZep/kittygram_final/actions/workflows/main.yml/badge.svg)-->
+- Проект доступен по адресу - [http://recipebook.sytes.net/](http://recipebook.sytes.net/)
+- Статус последнего workflow: ![workflow status](https://github.com/VanZep/Foodgram/actions/workflows/main.yml/badge.svg)
 ---
 ### Инструкция запуска проекта на своём компьютере
 #### 1. Установите Docker, если его нет:
@@ -96,16 +96,24 @@ DB_HOST=хост_бд (название контейнера БД)
 DB_PORT=порт_бд
 SECRET_KEY=секретный_ключ_джанго
 DEBUG=флаг_отладки (True или False)
-ALLOWED_HOSTS=адрес1 адрес2 домен1
+ALLOWED_HOSTS=адрес1,адрес2,домен1
 ```
 #### 5. Разверните проект на своём компьютере:
 - *В терминале, из директории Foodgram, выполните команду:*
 ```
 docker compose up
 ```
-- *В новом окне терминала выполните команду:*
+- *В новом окне терминала выполните следующие команды, не меняя указанный порядок:*
 ```
 docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py collectstatic
+docker compose exec backend cp -r /app/collected_static/. /static/static/
+docker compose exec backend cp -r /app/media/. /media/
+```
+- *Можете наполнить базу проекта тестовыми данными:*
+```
+docker compose exec backend python manage.py load_json
+docker compose exec backend python manage.py load_csv
 ```
 - *Можете создать пользователя superuser, чтобы войти на сайт:*
 ```
@@ -114,7 +122,7 @@ docker compose exec backend python manage.py createsuperuser
 
 - **Теперь можете войти на сайт, как пользователь, которого создали.**
 
-#### Проект будет доступен по адресу - [http://localhost:9000/](http://localhost:9000/)
+#### Проект будет доступен по адресу - [http://localhost:7000/](http://localhost:7000/)
 ---
 ### Инструкция запуска проекта на удалённом сервере
 #### 1. Выполните 2-ой пункт из инструкции запуска проекта на своём компьютере
@@ -158,7 +166,7 @@ server {
     
     location / {
         proxy_set_header Host $http_host;
-        proxy_pass http://127.0.0.1:9000;
+        proxy_pass http://127.0.0.1:7000;
     }
 
 }
@@ -176,6 +184,12 @@ sudo docker compose -f docker-compose.production.yml up -d
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
 sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /static/static/
+sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/media/. /media/
+```
+- *Можете наполнить базу проекта тестовыми данными:*
+```
+docker compose -f docker-compose.production.yml exec backend python manage.py load_json
+docker compose -f docker-compose.production.yml exec backend python manage.py load_csv
 ```
 - *Можете создать пользователя superuser, чтобы войти на сайт:*
 ```
