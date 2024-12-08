@@ -4,6 +4,7 @@ volumes:
   pg_data:
   static:
   media:
+  docs:
 
 services:
   db:
@@ -18,6 +19,7 @@ services:
     volumes:
       - static:/static
       - media:/media
+      - docs:/app/docs
 
   frontend:
     image: vanzep/foodgram_frontend
@@ -34,4 +36,4 @@ services:
     volumes:
       - static:/static
       - media:/media
-      - ./docs/:/usr/share/nginx/html/api/docs/
+      - docs:/usr/share/nginx/html/api/docs/
