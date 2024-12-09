@@ -9,20 +9,22 @@ def is_not_exists_objects_validator(obj, message):
         raise ValidationError({'detail': message})
 
 
+def number_deleted_objects_validator(number_deleted_objects, message):
+    """Валидатор проверки, количества удаленных объектов."""
+    if number_deleted_objects == 0:
+        raise ValidationError({'detail': message})
+
+
 def is_not_selected_validator(obj, name):
     """Валидатор проверки, что объект не выбран."""
     if not obj:
-        raise ValidationError(
-            f'Нужно выбрать хотя бы один {name}'
-        )
+        raise ValidationError(f'Нужно выбрать хотя бы один {name}')
 
 
 def only_one_selected_validator(obj_list, name):
     """Валидатор проверки, что объект уже выбран."""
     if len(obj_list) != len(set(obj_list)):
-        raise ValidationError(
-            f'Каждый {name} можно выбрать только один раз'
-        )
+        raise ValidationError(f'Каждый {name} можно выбрать только один раз')
 
 
 def min_max_value_validator(value, part_of_message):
