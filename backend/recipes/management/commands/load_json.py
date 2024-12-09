@@ -4,10 +4,10 @@ python manage.py load_json.
 """
 import json
 
-from foodgram_backend.settings import BASE_DIR
-from django.core.management import BaseCommand
 from django.db.utils import IntegrityError
+from django.core.management import BaseCommand
 
+from foodgram_backend.settings import BASE_DIR
 from recipes.models import User, Ingredient, Tag, Recipe, IngredientRecipe
 
 MODELS_JSONFILES = {

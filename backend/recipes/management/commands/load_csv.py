@@ -18,12 +18,9 @@ class Command(BaseCommand):
             with open(f'{BASE_DIR}/data/recipetag.csv') as csv_file:
                 rows = csv.DictReader(csv_file)
                 for row in rows:
-                    Recipe(
-                        pk=row['recipe_id']
-                    ).tags.add(
-                        Tag(pk=row['tag_id'])
-                    )
-                self.stdout.write(self.style.SUCCESS(
-                    'Данные модели RecipeTag загружены'))
+                    Recipe(pk=row['recipe_id']).tags.add(Tag(pk=row['tag_id']))
+                self.stdout.write(
+                    self.style.SUCCESS('Данные модели RecipeTag загружены')
+                )
         except Exception as error:
             self.stdout.write(self.style.ERROR(f'Ошибка {error}'))
