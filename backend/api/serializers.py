@@ -14,8 +14,7 @@ from recipes.models import (
 )
 from .validators import (
     is_not_selected_validator, only_one_selected_validator,
-    min_max_value_validator, is_not_exists_objects_validator,
-    user_is_author_validator
+    min_max_value_validator, is_not_exists_objects_validator
 )
 from .utils import (
     get_subscription_objects, get_favorite_recipe_objects,
@@ -97,12 +96,10 @@ class SubscriptionSerializer(UserSerializer):
                         'Значение recipes_limit должно быть целочисленным'
                     }
                 )
-        return (
-            RecipeShortSerializer(
-                recipes, many=True,
-                context={'request': self.context.get('request')}
-            ).data
-        )
+        return RecipeShortSerializer(
+            recipes, many=True,
+            context={'request': self.context.get('request')}
+        ).data
 
     def get_recipes_count(self, author):
         return author.recipes.count()
@@ -116,17 +113,14 @@ class CreateSubscriptionSerializer(serializers.ModelSerializer):
         fields = ('user', 'author')
         validators = (
             UniqueTogetherValidator(
-                queryset=Subscription.objects.all(),
-                fields=('user', 'author'),
+                queryset=Subscription.objects.all(), fields=fields,
                 message='Вы уже подписаны на данного автора'
             ),
         )
 
     def validate_author(self, author):
-        user_is_author_validator(
-            self.initial_data.get('user'), author.id,
-            'Нельзя подписаться на себя'
-        )
+        if self.initial_data.get('user') == author.id:
+            raise serializers.ValidationError('Нельзя подписаться на себя')
         return author
 
 
@@ -299,8 +293,7 @@ class CreteFavoriteRecipeSerializer(serializers.ModelSerializer):
         fields = ('recipe', 'user')
         validators = (
             UniqueTogetherValidator(
-                queryset=FavoriteRecipe.objects.all(),
-                fields=('recipe', 'user'),
+                queryset=FavoriteRecipe.objects.all(), fields=fields,
                 message='Данный рецепт уже находится у вас в избранном'
             ),
         )
@@ -314,8 +307,7 @@ class CreateShoppingCartSerializer(serializers.ModelSerializer):
         fields = ('recipe', 'user')
         validators = (
             UniqueTogetherValidator(
-                queryset=ShoppingCart.objects.all(),
-                fields=('recipe', 'user'),
+                queryset=ShoppingCart.objects.all(), fields=fields,
                 message='Данный рецепт уже находится у вас в корзине'
             ),
         )

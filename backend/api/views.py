@@ -22,9 +22,9 @@ from .utils import (
     get_shopping_cart_objects
 )
 from .pagination import PageNumberLimitPagination
+from .filters import RecipeFilter, IngredientFilter
 from .validators import is_not_exists_objects_validator
 from .permissions import IsAuthenticatedOrIsAuthorOrReadOnly
-from .filters import RecipeFilter, IngredientFilter
 
 
 class UserViewSet(DjoserUserViewSet):
