@@ -4,9 +4,9 @@ python manage.py load_csv.
 """
 import csv
 
-from foodgram_backend.settings import BASE_DIR
 from django.core.management import BaseCommand
 
+from foodgram_backend.settings import BASE_DIR
 from recipes.models import Recipe, Tag
 
 
