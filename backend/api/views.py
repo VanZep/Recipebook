@@ -23,7 +23,9 @@ from .utils import (
 )
 from .pagination import PageNumberLimitPagination
 from .filters import RecipeFilter, IngredientFilter
-from .validators import is_not_exists_objects_validator
+from .validators import (
+    is_not_exists_objects_validator, number_deleted_objects_validator
+)
 from .permissions import IsAuthenticatedOrIsAuthorOrReadOnly
 
 
@@ -70,11 +72,12 @@ class UserViewSet(DjoserUserViewSet):
     def delete_subscribe(self, request, id=None):
         """Удаление подписки."""
         author = get_object_or_404(User, id=id)
-        subscriptions = get_subscription_objects(request.user, author)
-        is_not_exists_objects_validator(
-            subscriptions, 'Вы не подписаны на данного автора'
+        deleted_subscriptions = get_subscription_objects(
+            request.user, author
+        ).delete()
+        number_deleted_objects_validator(
+            deleted_subscriptions[0], 'Вы не подписаны на данного автора'
         )
-        subscriptions.delete()
         return Response(status=HTTP_204_NO_CONTENT)
 
     @action(
@@ -137,13 +140,13 @@ class RecipeViewSet(ModelViewSet):
     def delete_from_favorite(self, request, pk=None):
         """Удаление из избранного."""
         recipe = get_object_or_404(Recipe, pk=pk)
-        favorite_recipes = get_favorite_recipe_objects(
+        deleted_favorite_recipes = get_favorite_recipe_objects(
             request.user, recipe
+        ).delete()
+        number_deleted_objects_validator(
+            deleted_favorite_recipes[0],
+            'У вас в избранном нет такого рецепта'
         )
-        is_not_exists_objects_validator(
-            favorite_recipes, 'У вас в избранном нет такого рецепта'
-        )
-        favorite_recipes.delete()
         return Response(status=HTTP_204_NO_CONTENT)
 
     @action(methods=('post',), detail=True)
@@ -164,14 +167,13 @@ class RecipeViewSet(ModelViewSet):
     def delete_from_shopping_cart(self, request, pk=None):
         """Удаление из корзины."""
         recipe = get_object_or_404(Recipe, pk=pk)
-        shopping_cart_recipes = get_shopping_cart_objects(
+        deleted_shopping_cart_recipes = get_shopping_cart_objects(
             request.user, recipe
-        )
-        is_not_exists_objects_validator(
-            shopping_cart_recipes,
+        ).delete()
+        number_deleted_objects_validator(
+            deleted_shopping_cart_recipes[0],
             'У вас в корзине нет такого рецепта'
         )
-        shopping_cart_recipes.delete()
         return Response(status=HTTP_204_NO_CONTENT)
 
     @action(
