@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.models import Group
 
 from core.constants import INLINE_EXTRA_FIELDS, MIN_NUM
 from .models import (
@@ -6,6 +7,7 @@ from .models import (
     IngredientRecipe, FavoriteRecipe, ShoppingCart
 )
 
+admin.site.unregister(Group)
 admin.site.empty_value_display = '-пусто-'
 
 

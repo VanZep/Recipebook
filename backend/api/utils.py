@@ -1,10 +1,12 @@
 from django.db.models import Sum
 from django.shortcuts import redirect
+from django.views.decorators.http import require_GET
 
 from recipes.models import Recipe, IngredientRecipe
 from .validators import is_not_exists_objects_validator
 
 
+@require_GET
 def get_short_url(request, pk):
     """Получение короткой ссылки на рецепт."""
     recipes = Recipe.objects.filter(pk=pk)
