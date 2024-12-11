@@ -4,6 +4,6 @@
     {"username": "Lena", "email": "Lena@mail.not", "first_name": "Елена", "last_name": "Соколова", "password": "Lena_12345", "avatar": "users/woman_2.jpg"},
     {"username": "Lev", "email": "Lev@mail.not", "first_name": "Лев", "last_name": "Соловьёв", "password": "Lev_12345", "avatar": "users/man_3.jpg"},
     {"username": "Admin", "email": "Admin@mail.not", "first_name": "Admin", "last_name": "Admin", "password": "Admin", "is_superuser": "True", "is_staff": "True", "avatar": "users/admin.jpg"},
-    {"username": "Kat", "email": "Kat@mail.not", "first_name": "Катя", "last_name": "Баринова", "password": "Kat_12345", "avatar": "users/man_4.jpg"},
-    {"username": "Ars", "email": "Ars@mail.not", "first_name": "Арсений", "last_name": "Чуганин", "password": "Ars_12345", "avatar": "users/woman_1.jpg"}
+    {"username": "Kat", "email": "Kat@mail.not", "first_name": "Катя", "last_name": "Баринова", "password": "Kat_12345", "avatar": "users/woman_1.jpg"},
+    {"username": "Ars", "email": "Ars@mail.not", "first_name": "Арсений", "last_name": "Чуганин", "password": "Ars_12345", "avatar": "users/man_4.jpg"}
 ]

@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
 
 from core.constants import INLINE_EXTRA_FIELDS, MIN_NUM
@@ -7,26 +8,18 @@ from .models import (
     IngredientRecipe, FavoriteRecipe, ShoppingCart
 )
 
+admin.site.site_header = 'Foodgram'
+admin.site.site_title = 'Foodgram'
 admin.site.unregister(Group)
 admin.site.empty_value_display = '-пусто-'
 
 
-class RecipeIngredientsInLine(admin.TabularInline):
+class RecipeIngredientsInline(admin.TabularInline):
+
     model = IngredientRecipe
     extra = INLINE_EXTRA_FIELDS
     min_num = MIN_NUM
-
-
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-
-    list_display = ('username', 'email')
-    fields = (
-        'username', 'email',
-        ('first_name', 'last_name'),
-        'password', 'avatar'
-    )
-    search_fields = ('username', 'email')
+    can_delete = False
 
 
 @admin.register(Recipe)
@@ -36,42 +29,60 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('name', 'author__username')
     readonly_fields = ('pub_date',)
     list_filter = ('tags',)
-    filter_horizontal = ('tags',)
-    inlines = (RecipeIngredientsInLine,)
+    autocomplete_fields = ('tags',)
+    save_on_top = True
+    inlines = (RecipeIngredientsInline,)
 
+    @admin.display(description='У пользователей в избранном')
     def favorite_count(self, obj):
         return obj.recipes_in_favorite.count()
 
-    favorite_count.short_description = 'У пользователей в избранном'
+
+@admin.register(User)
+class UserAdmin(BaseUserAdmin):
+
+    list_display = ('username', 'email')
+    search_fields = ('username', 'email')
+    list_display_links = ('username',)
+    readonly_fields = ('groups', 'user_permissions',)
+    save_on_top = True
+
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+
+    list_display = ('author', 'user')
+    search_fields = ('^author__username',)
+    list_display_links = None
 
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
 
-    list_display = ('id', 'name', 'measurement_unit')
+    list_display = ('name', 'measurement_unit')
     search_fields = ('^name', 'name')
+    list_display_links = ('name',)
+    ordering = ('id',)
     list_per_page = 20
 
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
 
-    list_display = ('id', 'name', 'slug')
-
-
-@admin.register(Subscription)
-class SubscriptionAdmin(admin.ModelAdmin):
-
-    list_display = ('user', 'author')
+    list_display = ('name', 'slug')
+    list_display_links = ('name',)
+    search_fields = ('^name',)
 
 
 @admin.register(FavoriteRecipe)
 class FavoriteRecipeAdmin(admin.ModelAdmin):
 
     list_display = ('user', 'recipe')
+    search_fields = ('^user__username',)
 
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
 
     list_display = ('user', 'recipe')
+    search_fields = ('^user__username',)
