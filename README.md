@@ -1,4 +1,4 @@
-# Проект Recipebook
+# Recipebook
 
 ## Описание
 <p>
