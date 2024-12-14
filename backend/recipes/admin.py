@@ -8,8 +8,7 @@ from .models import (
     IngredientRecipe, FavoriteRecipe, ShoppingCart
 )
 
-admin.site.site_header = 'Foodgram'
-admin.site.site_title = 'Foodgram'
+admin.site.site_header = admin.site.site_title = 'Foodgram'
 admin.site.unregister(Group)
 admin.site.empty_value_display = '-пусто-'
 
