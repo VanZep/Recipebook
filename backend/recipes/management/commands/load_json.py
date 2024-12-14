@@ -4,10 +4,10 @@ python manage.py load_json.
 """
 import json
 
+from django.conf import settings
 from django.db.utils import IntegrityError
 from django.core.management import BaseCommand
 
-from foodgram_backend.settings import BASE_DIR
 from recipes.models import User, Ingredient, Tag, Recipe, IngredientRecipe
 
 MODELS_JSONFILES = {
@@ -26,7 +26,7 @@ class Command(BaseCommand):
             model_name = model.__name__
             try:
                 with open(
-                    f'{BASE_DIR}/data/{json_file}',
+                    f'{settings.BASE_DIR}/data/{json_file}',
                     'r', encoding='utf-8'
                 ) as file:
                     data = json.loads(file.read())

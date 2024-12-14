@@ -4,9 +4,9 @@ python manage.py load_csv.
 """
 import csv
 
+from django.conf import settings
 from django.core.management import BaseCommand
 
-from foodgram_backend.settings import BASE_DIR
 from recipes.models import Recipe, Tag
 
 
@@ -15,7 +15,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         try:
-            with open(f'{BASE_DIR}/data/recipetag.csv') as csv_file:
+            with open(f'{settings.BASE_DIR}/data/recipetag.csv') as csv_file:
                 rows = csv.DictReader(csv_file)
                 for row in rows:
                     Recipe(pk=row['recipe_id']).tags.add(Tag(pk=row['tag_id']))

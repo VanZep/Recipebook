@@ -1,8 +1,10 @@
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.validators import ASCIIUsernameValidator
+from transliterate import detect_language, slugify
 
 from core.models import NameModel
 from core.constants import (
@@ -114,6 +116,12 @@ class Tag(NameModel):
     def __str__(self):
         return self.name
 
+    def clean(self):
+        if detect_language(self.name) != settings.LANGUAGE_CODE:
+            raise ValidationError('Название должно быть на русском языке.')
+        self.slug = slugify(self.name)
+        return super().clean()
+
 
 class Ingredient(NameModel):
     """Модель ингредиентов."""
@@ -219,7 +227,7 @@ class FavoriteRecipe(models.Model):
         )
 
     def __str__(self):
-        return f'Избранный {self.recipe} для {self.user}'
+        return f'{self.recipe} для {self.user}'
 
 
 class ShoppingCart(models.Model):

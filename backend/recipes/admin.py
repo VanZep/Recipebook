@@ -8,7 +8,7 @@ from .models import (
     IngredientRecipe, FavoriteRecipe, ShoppingCart
 )
 
-admin.site.site_header = admin.site.site_title = 'Foodgram'
+admin.site.site_header = admin.site.site_title = 'Recipebook'
 admin.site.unregister(Group)
 admin.site.empty_value_display = '-пусто-'
 
@@ -52,7 +52,6 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
     list_display = ('author', 'user')
     search_fields = ('^author__username',)
-    list_display_links = None
 
 
 @admin.register(Ingredient)
@@ -71,6 +70,7 @@ class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
     list_display_links = ('name',)
     search_fields = ('^name',)
+    fields = ('name',)
 
 
 @admin.register(FavoriteRecipe)
