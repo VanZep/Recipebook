@@ -35,7 +35,7 @@ Python 3.9, Django 4.2, djangorestframework 3.14, gunicorn 20.1, Nginx 1.22, djo
 - Обычная версия используется, чтобы развернуть проект на своём компьютере. В ней образы контейнеров создаются в процессе разворота проекта.
 - Продакшн-версия используется, чтобы развернуть проект на удаленном сервере. В ней используются готовые образы контейнеров с dockerhub.
 - Проект доступен по адресу - [http://recipebook.sytes.net/](http://recipebook.sytes.net/)
-- Статус последнего workflow: ![workflow status](https://github.com/VanZep/Foodgram/actions/workflows/main.yml/badge.svg)
+<!--- Статус последнего workflow: ![workflow status](https://github.com/VanZep/Foodgram/actions/workflows/main.yml/badge.svg)-->
 ---
 ### Инструкция запуска проекта на своём компьютере
 #### 1. Установите Docker, если его нет:
