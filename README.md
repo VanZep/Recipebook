@@ -28,7 +28,20 @@
 * Автоматическое формирование слага для тегов на основе названия. Реализовано с помощью библиотеки transliterate.
 
 ### Технологии
-Python 3.9, Django 4.2, djangorestframework 3.14, gunicorn 20.1, Nginx 1.22, djoser 2.1, PostgreSQL, Docker, React, API, Postman, JSON, YAML, CSV
+- Python 3.9
+- Django 4.2
+- djangorestframework 3.14
+- gunicorn 20.1
+- Nginx 1.22
+- djoser 2.1
+- PostgreSQL
+- Docker
+- React
+- API
+- Postman
+- JSON
+- YAML
+- CSV
 
 ## Техническое описание
 В проекте Recipebook есть две версии:
